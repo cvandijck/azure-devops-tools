@@ -1,6 +1,6 @@
 # azure-devops-tools
 
-Set of pragmatic tools to automate working with Azure Devops
+Set of practical tools to automate working with Azure Devops
 
 More information can be found on the project's [website](https://github.com/cvandijck/azure-devops-tools).
 
@@ -13,7 +13,7 @@ You can install adopt using the distributed wheel via pip:
 python -m pip install adopt-0.0.0-py3-non-any.whl
 ```
 
-This installation should automatically pull and install all required dependencies from PyPI. In the case of custom 
+This installation should automatically pull and install all required dependencies from PyPI. In the case of custom
 dependencies, you can direct pip to a local server:
 
 ```console

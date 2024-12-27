@@ -19,7 +19,7 @@ classifiers = [
     'Intended Audience :: Developers',
     'Programming Language :: Python :: 3',
 ]
-dependencies = []
+dependencies = ['azure-devops', 'python-dotenv']
 dynamic = ['version']
 
 [project.optional-dependencies]
