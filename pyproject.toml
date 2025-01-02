@@ -19,11 +19,18 @@ classifiers = [
     'Intended Audience :: Developers',
     'Programming Language :: Python :: 3',
 ]
-dependencies = ['azure-devops', 'python-dotenv']
+dependencies = ['azure-devops', 'python-dotenv', 'click']
 dynamic = ['version']
 
 [project.optional-dependencies]
-dev = ['build', 'pytest', 'pytest-cov', 'pre-commit', 'sphinx_rtd_theme']
+dev = [
+    'build',
+    'twine',
+    'pytest',
+    'pytest-cov',
+    'pre-commit',
+    'sphinx_rtd_theme',
+]
 
 [project.scripts]
 'adopt' = 'adopt.__main__:main'

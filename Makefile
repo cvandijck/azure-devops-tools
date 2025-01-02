@@ -60,3 +60,5 @@ run-app:
 run-docker:
 	docker run -p 8501:8501 $(DOCKER_TAG)
 
+publish-wheels:
+	$(PYTHON) -m twine upload $(BUILD_WHEEL_DIR)/*
