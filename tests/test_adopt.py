@@ -1,9 +1,20 @@
+import os
 import subprocess
 import sys
 
 import pytest
 
+from adopt.connect import create_connection
+from adopt.env import PAT_ENV, URL_ENV
+
 PYTHON_EXE = sys.executable
+
+
+def test_connect():
+    url = os.getenv(URL_ENV)
+    token = os.getenv(PAT_ENV)
+    create_connection(organization_url=url, token_password=token)
+    # TODO: do better testing on connection
 
 
 def test_import_package():

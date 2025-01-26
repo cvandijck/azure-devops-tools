@@ -1,9 +1,6 @@
 import click
 
-PAT_ENV = 'AZURE_DEVOPS_PAT'
-URL_ENV = 'AZURE_DEVOPS_ORGANIZATION_URL'
-PROJECT_ENV = 'AZURE_DEVOPS_PROJECT_NAME'
-TEAM_ENV = 'AZURE_DEVOPS_TEAM_NAME'
+from adopt.env import PAT_ENV, PROJECT_ENV, TEAM_ENV, URL_ENV
 
 log_type = click.Choice(['DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL'], case_sensitive=False)
 
