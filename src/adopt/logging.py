@@ -1,4 +1,5 @@
 import logging
+import sys
 from pathlib import Path
 from typing import Optional
 
@@ -43,5 +44,14 @@ def configure_logging(
 
 
 def convert_logging_level(level: str) -> int:
+    # in python 3.11 logging.getLevelName is deprecated
+
+    if sys.version_info < (3, 11):
+        return logging.getLevelName(level)
+
     mapping = logging.getLevelNamesMapping()
+
+    if level.upper() not in mapping:
+        raise ValueError(f'Invalid log level: {level}')
+
     return mapping[level.upper()]

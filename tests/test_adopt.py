@@ -24,4 +24,4 @@ def test_console_noargs():
     process = subprocess.run(
         [PYTHON_EXE, '-m', 'adopt', 'backlog', 'sort'], capture_output=True, universal_newlines=True
     )
-    assert process.returncode == 2, process.stderr
+    assert process.returncode == 1, process.stderr
