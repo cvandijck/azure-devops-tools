@@ -109,7 +109,14 @@ docstring-code-format = false
 ##  PYTEST  ##
 [tool.pytest.ini_options]
 minversion = '6.0'
-addopts = ['-ra', '-vv']
+addopts = [
+    '-ra',
+    '-vv',
+    '--junitxml=_build/test-results.xml',
+    '--cov=src',
+    '--cov-report=xml:_build/coverage.xml',
+    '--cov-report=html:_build/htmlcov',
+]
 log_cli = true
 log_cli_level = 'INFO'
 testpaths = ['tests']

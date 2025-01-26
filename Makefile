@@ -38,7 +38,7 @@ install-project:
 
 test:
 	$(info MAKE: Running tests ...)
-	$(PYTHON) -m pytest tests --junitxml=$(BUILD_TEST_DIR)/test-results.xml --cov=src --cov-report=xml:$(BUILD_TEST_DIR)/coverage.xml --cov-report=html:$(BUILD_TEST_DIR)/htmlcov
+	$(RUN_MODULE) pytest tests
 
 install-pre-commit:
 	$(info MAKE: Installing pre-commit hooks...)
@@ -49,7 +49,10 @@ pre-commit:
 	$(RUN_MODULE) pre_commit run --all-files
 
 build-wheels:
-	$(PYTHON) -m build . --outdir $(BUILD_WHEEL_DIR)
+	$(RUN_MODULE) build . --outdir $(BUILD_WHEEL_DIR)
+
+install-wheels:
+	$(PIP) install $(BUILD_WHEEL_DIR)/*.whl
 
 build-docker:
 	docker build -t $(DOCKER_TAG) .
@@ -61,4 +64,4 @@ run-docker:
 	docker run -p 8501:8501 $(DOCKER_TAG)
 
 publish-wheels:
-	$(PYTHON) -m twine upload $(BUILD_WHEEL_DIR)/*
+	$(RUN_MODULE) twine upload $(BUILD_WHEEL_DIR)/*

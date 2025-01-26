@@ -1,3 +1,6 @@
+# CI CD
+_build
+
 # Build
 build/**
 dist/**
