@@ -33,6 +33,7 @@ jobs:
           name: wheel
           path: _build/wheel
           retention-days: 1
+          if-no-files-found: error
 
   test:
     runs-on: ubuntu-latest
@@ -48,7 +49,6 @@ jobs:
       - name: Retrieve wheel
         uses: actions/download-artifact@v4
         with:
-          name: wheel
           path: _build/wheel
       - name: Install wheel
         run: |
