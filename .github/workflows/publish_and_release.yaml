@@ -116,9 +116,9 @@ jobs:
         uses: softprops/action-gh-release@v1
         with:
           files: dist/*
-          name: Release $VERSION
-          tag_name: $VERSION
-          body: Releasing $VERSION  # TODO: Add release notes
+          name: Release ${{ env.VERSION }}
+          tag_name: ${{ env.VERSION }}
+          body: Releasing ${{ env.VERSION }} # TODO: Add release notes
           draft: false
           prerelease: false
           token: ${{ secrets.GITHUB_TOKEN }}
