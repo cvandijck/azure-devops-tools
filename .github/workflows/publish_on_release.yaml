@@ -2,14 +2,9 @@
 
 name: Publish Python Package
 
-# on:
-#   release:
-#     types: [published]
 on:
-  push:
-    branches: ["main"]
-  pull_request:
-    branches: ["main"]
+  release:
+    types: [published]
 
 permissions:
   contents: read
@@ -44,8 +39,7 @@ jobs:
       id-token: write
     environment:
       name: pypi
-      url: https://pypi.org/project/adopt/
-      # url: https://pypi.org/project/adopt/${{ github.event.release.name }}
+      url: https://pypi.org/project/adopt/${{ github.event.release.name }}
 
     steps:
       - name: Retrieve wheel
@@ -54,7 +48,7 @@ jobs:
           name: wheel
           path: dist/
 
-      # - name: Publish to PyPI
-      #   uses: pypa/gh-action-pypi-publish@release/v1
-      #   with:
-      #     packages-dir: dist/
+      - name: Publish to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          packages-dir: dist/
