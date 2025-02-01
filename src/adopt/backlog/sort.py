@@ -85,16 +85,23 @@ def sort_backlog(
 def reorder_backlog(
     backlog: Backlog, target_backlog: Backlog, work_client: WorkClient, team_context: TeamContext
 ) -> Backlog:
-    swaps = _compute_swaps(backlog=backlog, target=target_backlog)
+    swaps = compute_swaps(backlog=backlog, target=target_backlog)
     for swap in swaps:
         LOGGER.info(f'Apply swap {swap}')
         _apply_swap_on_azure(swap=swap, work_client=work_client, team_context=team_context)
 
 
-def _compute_swaps(backlog: Backlog, target: Backlog) -> list[Swap]:
+def reorder_backlog_local(backlog: Backlog, target_backlog: Backlog) -> Backlog:
+    swaps = compute_swaps(backlog=backlog, target=target_backlog)
+    for swap in swaps:
+        LOGGER.info(f'Apply swap {swap}')
+        _apply_swap_on_backlog(swap=swap, backlog=backlog)
+
+
+def compute_swaps(backlog: Backlog, target: Backlog) -> list[Swap]:
     swaps = []
 
-    current_backlog = backlog
+    current_backlog = backlog.copy()
     for target_item_idx, target_item in enumerate(target.work_items):
         current_items = current_backlog.work_items
         item_on_current_backlog = current_items[target_item_idx]
@@ -113,7 +120,7 @@ def _compute_swaps(backlog: Backlog, target: Backlog) -> list[Swap]:
             next_item = current_items[target_item_idx]
 
         swap = Swap(item=target_item, next_item=next_item, previous_item=previous_item)
-        current_backlog = _apply_swap_on_backlog(swap=swap, backlog=current_backlog)
+        _apply_swap_on_backlog(swap=swap, backlog=current_backlog)
         swaps.append(swap)
 
     return swaps
@@ -131,7 +138,7 @@ def _apply_swap_on_azure(swap: Swap, work_client: WorkClient, team_context: Team
 
 
 def _apply_swap_on_backlog(swap: Swap, backlog: Backlog):
-    work_items = list(backlog.work_items)
+    work_items = backlog.work_items
     work_items.remove(swap.item)
 
     if swap.previous_item is None:
@@ -144,5 +151,4 @@ def _apply_swap_on_backlog(swap: Swap, backlog: Backlog):
         assert prev_item_idx == next_item_idx - 1
 
         work_items = work_items[: prev_item_idx + 1] + [swap.item] + work_items[next_item_idx:]
-
-    return Backlog(work_items)
+    backlog.work_items = work_items

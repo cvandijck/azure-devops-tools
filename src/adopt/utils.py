@@ -210,6 +210,9 @@ class Backlog:
         for wi in self.work_items:
             wi.update()
 
+    def copy(self):
+        return Backlog(list(self.work_items))
+
     def __iter__(self):
         return iter(self.work_items)
 

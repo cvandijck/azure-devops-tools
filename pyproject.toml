@@ -124,5 +124,5 @@ testpaths = ['tests']
 markers = [
     "slow: slow tests that should not run by default",
     "console: test that directly test the console entrypoint",
-    "connection: test that require a connection to the internet",
+    "mutate: test that mutates the test backlog",
 ]
