@@ -48,22 +48,27 @@ jobs:
         python-version: ["3.9", "3.10", "3.11", "3.12", "3.13"]
     steps:
       - uses: actions/checkout@v4
+
       - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v3
         with:
           python-version: ${{ matrix.python-version }}
+
+      - name: Clean dist
+        run: |
+          rm -rf dist/
+
       - name: Retrieve wheel
         uses: actions/download-artifact@v4
         with:
           name: wheel
-          path: _build/wheel
+          path: dist/
+
       - name: Install wheel
         run: |
           python -m pip install --upgrade pip
-          python -m pip install _build/wheel/*.whl
-      - name: Check connection
-        run: |
-          curl -i $AZURE_DEVOPS_ORGANIZATION_URL
+          python -m pip install dist/*.whl
+
       - name: Test with pytest
         run: |
           python -m pip install pytest
