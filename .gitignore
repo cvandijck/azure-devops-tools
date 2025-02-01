@@ -1,3 +1,6 @@
+# CI CD
+_build
+
 # Build
 build/**
 dist/**
@@ -6,6 +9,7 @@ dist/**
 # Tests
 tests/data/**
 !tests/data/README.md
+.test_env
 
 # Data
 src/adopt/data/**

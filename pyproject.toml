@@ -11,7 +11,7 @@ authors = [
 description = 'Set of pragmatic tools to automate working with Azure Devops'
 readme = { file = 'README.md', content-type = 'text/markdown' }
 
-requires-python = '>=3.11'
+requires-python = '>=3.9'
 keywords = []
 license = { text = 'BSD-3-Clause' }
 classifiers = [
@@ -19,11 +19,18 @@ classifiers = [
     'Intended Audience :: Developers',
     'Programming Language :: Python :: 3',
 ]
-dependencies = []
+dependencies = ['azure-devops', 'python-dotenv', 'click']
 dynamic = ['version']
 
 [project.optional-dependencies]
-dev = ['build', 'pytest', 'pytest-cov', 'pre-commit', 'sphinx_rtd_theme']
+dev = [
+    'build',
+    'twine',
+    'pytest',
+    'pytest-cov',
+    'pre-commit',
+    'sphinx_rtd_theme',
+]
 
 [project.scripts]
 'adopt' = 'adopt.__main__:main'
@@ -102,7 +109,20 @@ docstring-code-format = false
 ##  PYTEST  ##
 [tool.pytest.ini_options]
 minversion = '6.0'
-addopts = ['-ra', '-vv']
+addopts = [
+    '-ra',
+    '-vv',
+    '--junitxml=_build/test-results.xml',
+    # breaks pytest in vscode; added for CI but need to find fix
+    # '--cov=src',
+    # '--cov-report=xml:_build/coverage.xml',
+    # '--cov-report=html:_build/htmlcov',
+]
 log_cli = true
 log_cli_level = 'INFO'
 testpaths = ['tests']
+markers = [
+    "slow: slow tests that should not run by default",
+    "console: test that directly test the console entrypoint",
+    "mutate: test that mutates the test backlog",
+]
