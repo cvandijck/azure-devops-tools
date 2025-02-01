@@ -18,10 +18,15 @@ def test_backlog_shuffle_sort(url, token, project, team):
     )
 
     # reverse the order of user stories
-    reversed_backlog = Backlog(reversed(backlog.work_items))
+    reversed_backlog = Backlog(list(reversed(backlog.work_items)))
 
     assert backlog != reversed_backlog
-    reorder_backlog(backlog=backlog, target_backlog=reversed_backlog, work_client=work_client)
+    reorder_backlog(
+        backlog=backlog,
+        target_backlog=reversed_backlog,
+        work_client=work_client,
+        team_context=team_context,
+    )
 
     new_backlog = get_backlog(
         wit_client=wit_client,
@@ -29,5 +34,11 @@ def test_backlog_shuffle_sort(url, token, project, team):
         team_context=team_context,
         backlog_category=category,
     )
-
     assert new_backlog == reversed_backlog
+
+    reorder_backlog(
+        backlog=reversed_backlog,
+        target_backlog=backlog,
+        work_client=work_client,
+        team_context=team_context,
+    )

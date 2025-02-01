@@ -27,11 +27,12 @@ WI_EPIC_TYPE = 'Epic'
 WI_FEATURE_TYPE = 'Feature'
 WI_USER_STORY_TYPE = 'User Story'
 WI_USER_STORY_TYPE_2 = 'Story'
+WI_BUG_TYPE = 'Bug'
 
 BACKLOG_CATEGORY_WI_TYPE_MAP = {
     BACKLOG_EPIC_CATEGORY.lower(): WI_EPIC_TYPE,
     BACKLOG_FEATURE_CATEGORY.lower(): WI_FEATURE_TYPE,
-    BACKLOG_REQUIREMENT_CATEGORY.lower(): WI_USER_STORY_TYPE,
+    BACKLOG_REQUIREMENT_CATEGORY.lower(): WI_USER_STORY_TYPE,  # can also be bug
 }
 
 BACKLOG_WI_TYPE_CATEGORY_MAP = {
@@ -39,6 +40,7 @@ BACKLOG_WI_TYPE_CATEGORY_MAP = {
     WI_FEATURE_TYPE.lower(): BACKLOG_FEATURE_CATEGORY,
     WI_USER_STORY_TYPE.lower(): BACKLOG_REQUIREMENT_CATEGORY,
     WI_USER_STORY_TYPE_2.lower(): BACKLOG_REQUIREMENT_CATEGORY,
+    WI_BUG_TYPE.lower(): BACKLOG_REQUIREMENT_CATEGORY,
 }
 
 
@@ -62,7 +64,7 @@ class AbstractWorkItem:
 
     def __init__(self, work_item: WorkItem, wit_client: WorkItemTrackingClient):
         if self.WI_TYPE and work_item.fields[WI_ITEM_TYPE_KEY] != self.WI_TYPE:
-            raise ValueError(f'Work item is not a {self.WI_TYPE}')
+            raise ValueError(f'Work item {work_item.url} is not a {self.WI_TYPE}')
 
         self._work_item = work_item
         self._wit_client = wit_client
@@ -152,6 +154,9 @@ class AbstractWorkItem:
             # reversed to put backlog last
             return len(self_it_path) > len(other_it_path)
 
+    def __eq__(self, value):
+        return self.id == value.id
+
     def __str__(self) -> str:
         return f'[{self.id}] {self._normalized_title} | {self.iteration_path} | {self.PRINT_PARENT_PATH_SEP.join(self.item_path)}'  # noqa: E501
 
@@ -178,6 +183,17 @@ class Feature(AbstractWorkItem):
 class UserStory(AbstractWorkItem):
     PARENT_CLASS = Feature
     WI_TYPE = WI_USER_STORY_TYPE
+
+    def __init__(self, work_item: WorkItem, wit_client: WorkItemTrackingClient):
+        super().__init__(work_item, wit_client)
+
+    def __str__(self) -> str:
+        return f'({self.priority}) {super().__str__()}'
+
+
+class Bug(AbstractWorkItem):
+    PARENT_CLASS = Feature
+    WI_TYPE = WI_BUG_TYPE
 
     def __init__(self, work_item: WorkItem, wit_client: WorkItemTrackingClient):
         super().__init__(work_item, wit_client)
@@ -231,17 +247,19 @@ def create_team_context(project: str, team: str) -> TeamContext:
 
 
 def create_work_item_from_details(
-    wi: WorkItem, wit_client: WorkItemTrackingClient, item_type: Optional[str] = None
+    work_item: WorkItem, wit_client: WorkItemTrackingClient, item_type: Optional[str] = None
 ) -> AbstractWorkItem:
     if item_type is None:
-        item_type = wi.fields[WI_ITEM_TYPE_KEY]
+        item_type = work_item.fields[WI_ITEM_TYPE_KEY]
 
     if item_type == WI_USER_STORY_TYPE:
-        return UserStory(wi, wit_client)
+        return UserStory(work_item, wit_client)
+    elif item_type == WI_BUG_TYPE:
+        return Bug(work_item, wit_client)
     elif item_type == WI_FEATURE_TYPE:
-        return Feature(wi, wit_client)
+        return Feature(work_item, wit_client)
     elif item_type == WI_EPIC_TYPE:
-        return Epic(wi, wit_client)
+        return Epic(work_item, wit_client)
     else:
         raise ValueError(f'Unknown work item type: {item_type}')
 
@@ -260,6 +278,10 @@ def get_backlog(
     work_item_ids = [wi.target.id for wi in backlog_work_items]
     work_items_details = wit_client.get_work_items(ids=work_item_ids, expand=WI_RELATIONS)
 
-    item_type = get_work_item_type_from_backlog_category(backlog_category)
-    items = [create_work_item_from_details(wid, wit_client, item_type) for wid in work_items_details]
+    # do not explicitly set item_type, Requirements can contain User Stories and Bugs
+    # TODO: see if we can do this in a more elegant way
+    items = [
+        create_work_item_from_details(work_item=wid, wit_client=wit_client, item_type=None)
+        for wid in work_items_details
+    ]
     return Backlog(items)

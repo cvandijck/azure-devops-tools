@@ -113,9 +113,10 @@ addopts = [
     '-ra',
     '-vv',
     '--junitxml=_build/test-results.xml',
-    '--cov=src',
-    '--cov-report=xml:_build/coverage.xml',
-    '--cov-report=html:_build/htmlcov',
+    # breaks pytest in vscode; added for CI but need to find fix
+    # '--cov=src',
+    # '--cov-report=xml:_build/coverage.xml',
+    # '--cov-report=html:_build/htmlcov',
 ]
 log_cli = true
 log_cli_level = 'INFO'

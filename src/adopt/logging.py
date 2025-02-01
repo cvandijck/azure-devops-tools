@@ -1,7 +1,7 @@
 import logging
 import sys
 from pathlib import Path
-from typing import Optional
+from typing import Literal, Optional
 
 DEFAULT_LOGGING_FORMAT = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 
@@ -19,28 +19,29 @@ def configure_logging(
     level=logging.INFO,
     log_format: str = DEFAULT_LOGGING_FORMAT,
     log_file_path: Optional[Path] = None,
+    log_file_mode: Literal['w', 'a'] = 'a',
     exclude_external_logs: bool = False,
-) -> logging.Logger:
+):
     logger = logging.getLogger()
-    logger.setLevel(level)
+    logger.setLevel(logging.NOTSET)  # Let the handlers decide the level
 
     formatter = logging.Formatter(log_format)
 
     if log_file_path:
-        file_handler = logging.FileHandler(str(log_file_path))
+        file_handler = logging.FileHandler(filename=str(log_file_path), mode=log_file_mode)
         file_handler.setFormatter(formatter)
+        file_handler.setLevel(level)
         logger.addHandler(file_handler)
 
     console_handler = logging.StreamHandler()
     console_handler.setFormatter(formatter)
+    console_handler.setLevel(level)
     logger.addHandler(console_handler)
 
     if exclude_external_logs:
         package_name = __name__.split('.')[0]
         package_filter = PackageFilter(package_name)
         logger.addFilter(package_filter)
-
-    return logger
 
 
 def convert_logging_level(level: str) -> int:

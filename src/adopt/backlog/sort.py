@@ -66,7 +66,7 @@ def sort_backlog(
         return
 
     LOGGER.info('user stories are not in order of priority')
-    reorder_backlog(backlog=backlog, target_backlog=sorted_backlog, work_client=work_client)
+    reorder_backlog(backlog=backlog, target_backlog=sorted_backlog, work_client=work_client, team_context=team_context)
 
     new_backlog = get_backlog(
         wit_client=wit_client,
@@ -82,17 +82,19 @@ def sort_backlog(
     return new_backlog
 
 
-def reorder_backlog(backlog: Backlog, target_backlog: Backlog, work_client: WorkClient) -> Backlog:
+def reorder_backlog(
+    backlog: Backlog, target_backlog: Backlog, work_client: WorkClient, team_context: TeamContext
+) -> Backlog:
     swaps = _compute_swaps(backlog=backlog, target=target_backlog)
     for swap in swaps:
         LOGGER.info(f'Apply swap {swap}')
-        _apply_swap_on_azure(swap=swap, work_client=work_client)
+        _apply_swap_on_azure(swap=swap, work_client=work_client, team_context=team_context)
 
 
-def _compute_swaps(original: Backlog, target: Backlog) -> list[Swap]:
+def _compute_swaps(backlog: Backlog, target: Backlog) -> list[Swap]:
     swaps = []
 
-    current_backlog = original
+    current_backlog = backlog
     for target_item_idx, target_item in enumerate(target.work_items):
         current_items = current_backlog.work_items
         item_on_current_backlog = current_items[target_item_idx]
