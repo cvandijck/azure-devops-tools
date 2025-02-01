@@ -1,11 +1,11 @@
-import pytest
+# import pytest
 
 from adopt.backlog.sort import reorder_backlog
 from adopt.connect import create_connection, get_work_client, get_work_item_tracking_client
 from adopt.utils import Backlog, create_team_context, get_backlog, get_backlog_category_from_work_item_type
 
 
-@pytest.mark.connection
+# @pytest.mark.connection
 def test_backlog_shuffle_sort(url, token, project, team):
     connection = create_connection(organization_url=url, token_password=token)
     wit_client = get_work_item_tracking_client(connection=connection)
