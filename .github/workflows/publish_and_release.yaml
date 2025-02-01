@@ -65,7 +65,7 @@ jobs:
     needs: publish
     permissions:
       id-token: write
-
+      contents: write
     steps:
       - uses: actions/setup-python@v5
         with:
