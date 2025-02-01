@@ -25,7 +25,7 @@ jobs:
 
       - name: Clean dist
         run: |
-          rm -rf dist/
+          rm -rf build/
 
       - name: Build wheel
         run: |
@@ -37,7 +37,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: wheel
-          path: dist/
+          path: build/
 
   publish:
     runs-on: ubuntu-latest

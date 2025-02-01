@@ -26,7 +26,7 @@ jobs:
 
       - name: Clean dist
         run: |
-          rm -rf dist/
+          rm -rf build/
 
       - name: Build package
         run: |
@@ -38,7 +38,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: wheel
-          path: /dist
+          path: /build
           retention-days: 1
           if-no-files-found: error
 
