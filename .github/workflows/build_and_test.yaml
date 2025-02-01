@@ -38,7 +38,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: wheel
-          path: /dist
+          path: dist/
           retention-days: 1
           if-no-files-found: error
 

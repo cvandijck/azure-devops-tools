@@ -111,13 +111,14 @@ jobs:
       - name: Echo VERSION
         run: |
           echo $VERSION
-        # uses: softprops/action-gh-release@v1
-        # with:
-        #   files: dist/*
-        #   tag_name: ${{ github.event.release.tag_name }}
-        #   release_name: ${{ github.event.release.name }}
-        #   body: ${{ github.event.release.body }}
-        #   draft: false
-        #   prerelease: false
-        #   token: ${{ secrets.GITHUB_TOKEN }}
-      # - name: Create GitHub Release
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: dist/*
+          name: Release $VERSION
+          tag_name: $VERSION
+          body: Releasing $VERSION  # TODO: Add release notes
+          draft: false
+          prerelease: false
+          token: ${{ secrets.GITHUB_TOKEN }}
