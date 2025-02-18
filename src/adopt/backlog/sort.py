@@ -1,5 +1,6 @@
 import logging
 from dataclasses import dataclass
+from functools import cmp_to_key
 from typing import Optional
 
 from azure.devops.v7_0.work import ReorderOperation, TeamContext, WorkClient
@@ -35,6 +36,26 @@ class Swap:
         return self.previous_item.id if self.previous_item else 0
 
 
+def compare_work_items(item1: AbstractWorkItem, item2: AbstractWorkItem) -> int:
+    iter_parts_1 = item1.iteration_path.split('\\')
+    iter_parts_2 = item2.iteration_path.split('\\')
+
+    if len(iter_parts_1) == len(iter_parts_2):
+        # both in backlog or both in sprint
+        if iter_parts_1[-1] == iter_parts_2[-1]:
+            # both in same sprint
+            # sort by priority and full path (titles of parents and self)
+            sort_tuple_1 = (item1.priority, *item1.item_path)
+            sort_tuple_2 = (item2.priority, *item2.item_path)
+            return -1 if sort_tuple_1 < sort_tuple_2 else 1
+        else:
+            return -1 if iter_parts_1[-1] > iter_parts_2[-1] else 1
+    else:
+        # one in backlog and one in sprint
+        # put sprint items first
+        return -1 if len(iter_parts_1) > len(iter_parts_2) else 1
+
+
 def sort_backlog(
     wit_client: WorkItemTrackingClient,
     work_client: WorkClient,
@@ -54,7 +75,16 @@ def sort_backlog(
         LOGGER.debug(item)
 
     # Verify the order of user stories by priority
-    sorted_backlog = Backlog(sorted(backlog.work_items))
+    # rank_func = partial(
+    #     get_work_item_backlog_rank,
+    #     work_client=work_client,
+    #     team_context=team_context,
+    #     backlog_category=backlog_category,
+    # )
+    # compare_func = partial(compare_work_items, rank_func=rank_func)
+
+    sorted_work_items = sorted(backlog.work_items, key=cmp_to_key(compare_work_items))
+    sorted_backlog = Backlog(sorted_work_items)
 
     LOGGER.debug('Sorted backlog:')
     for item in sorted_backlog:
@@ -65,7 +95,7 @@ def sort_backlog(
         LOGGER.info('all user stories are in correct order')
         return
 
-    LOGGER.info('user stories are not in order of priority')
+    LOGGER.info('user stories are not in the correct order')
     reorder_backlog(backlog=backlog, target_backlog=sorted_backlog, work_client=work_client, team_context=team_context)
 
     new_backlog = get_backlog(
