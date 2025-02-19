@@ -21,7 +21,7 @@ VALID_SORT_KEY_ELEMENTS_ALL = [val for el in VALID_SORT_KEY_ELEMENTS for val in 
 VALID_SORT_KEY_STR = ', '.join(VALID_SORT_KEY_ELEMENTS_ALL[:-1]) + f' or {VALID_SORT_KEY_ELEMENTS_ALL[-1]}'
 VALID_SORT_KEY_REGEX = re.compile(rf'^[{"".join(VALID_SORT_KEY_ELEMENTS_ALL)}]+$')
 
-DEFAULT_SORT_KEY = 'IPr'
+DEFAULT_SORT_KEY = 'IPtr'
 
 
 @dataclass
@@ -109,30 +109,8 @@ def compare_work_items(item1: BaseWorkItem, item2: BaseWorkItem, sort_key: str) 
     return result
 
 
-def _compare(item1: BaseWorkItem, item2: BaseWorkItem) -> int:
-    item1_iter_parts = item1.iteration_path.split('\\')
-    item2_iter_parts = item2.iteration_path.split('\\')
-
-    item1_hierarchy = item1.hierarchy
-    item2_hierarchy = item2.hierarchy
-
-    item1_ranks = [item.backlog_rank for item in item1_hierarchy[:-1]]
-    item2_ranks = [item.backlog_rank for item in item2_hierarchy[:-1]]
-
-    if len(item1_iter_parts) == len(item2_iter_parts):
-        # both in backlog or both in sprint
-        if item1_iter_parts[-1] == item2_iter_parts[-1]:
-            # both in same sprint
-            # sort by priority and full path (titles of parents and self)
-            sort_tuple_1 = (item1.priority, *item1_ranks)
-            sort_tuple_2 = (item2.priority, *item2_ranks)
-            return -1 if sort_tuple_1 < sort_tuple_2 else 1
-        else:
-            return -1 if item1_iter_parts[-1] > item2_iter_parts[-1] else 1
-    else:
-        # one in backlog and one in sprint
-        # put sprint items first
-        return -1 if len(item1_iter_parts) > len(item2_iter_parts) else 1
+def generate_sort_key_func(sort_key: str):
+    return cmp_to_key(partial(compare_work_items, sort_key=sort_key))
 
 
 def sort_backlog(
@@ -154,7 +132,7 @@ def sort_backlog(
     for item in backlog:
         LOGGER.debug(item)
 
-    key_func = cmp_to_key(partial(compare_work_items, sort_key=sort_key))
+    key_func = generate_sort_key_func(sort_key=sort_key)
     sorted_work_items = sorted(backlog.work_items, key=key_func)
     sorted_backlog = Backlog(sorted_work_items)
 
