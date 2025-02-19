@@ -74,9 +74,20 @@ jobs:
         run: |
           echo "VERSION=$(cat version.txt)" >> $GITHUB_ENV
 
-      - name: Echo VERSION
-        run: |
-          echo $VERSION
+      - uses: mukunku/tag-exists-action@v1.6.0
+        id: check-tag
+        with:
+          tag: ${{ env.VERSION }}
+
+      - name: Check if tag exists
+        run: exit 1
+        if: steps.check-tag.outputs.exists == 'true'
+
+      - name: Upload wheel
+        uses: actions/upload-artifact@v4
+        with:
+          name: version
+          path: version.txt
 
   publish:
     runs-on: ubuntu-latest
@@ -88,16 +99,20 @@ jobs:
       url: https://pypi.org/project/adopt
 
     steps:
-      - name: Retrieve wheel
+      - name: Clean dist
+        run: |
+          rm -rf dist/
+
+      - name: Retrieve data
         uses: actions/download-artifact@v4
         with:
           name: wheel
-          path: dist/
+          path: dist/wheel
 
       - name: Publish to PyPI
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
-          packages-dir: dist/
+          packages-dir: dist/wheel
 
   release:
     runs-on: ubuntu-latest
@@ -114,12 +129,22 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: wheel
+          path: dist/wheel
+
+      - name: Retrieve version
+        uses: actions/download-artifact@v4
+        with:
+          name: version
           path: dist/
+
+      - name: Store version
+        run: |
+          echo "VERSION=$(cat dist/version.txt)" >> $GITHUB_ENV
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v1
         with:
-          files: dist/*
+          files: dist/wheel/*
           name: Release ${{ env.VERSION }}
           tag_name: ${{ env.VERSION }}
           body: Releasing ${{ env.VERSION }} # TODO: Add release notes
