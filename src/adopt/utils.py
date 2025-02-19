@@ -29,13 +29,13 @@ WI_USER_STORY_TYPE = 'User Story'
 WI_USER_STORY_TYPE_2 = 'Story'
 WI_BUG_TYPE = 'Bug'
 
-BACKLOG_CATEGORY_WI_TYPE_MAP = {
+BACKLOG_CATEGORY_WORK_ITEM_TYPE_MAP = {
     BACKLOG_EPIC_CATEGORY.lower(): WI_EPIC_TYPE,
     BACKLOG_FEATURE_CATEGORY.lower(): WI_FEATURE_TYPE,
     BACKLOG_REQUIREMENT_CATEGORY.lower(): WI_USER_STORY_TYPE,  # can also be bug
 }
 
-BACKLOG_WI_TYPE_CATEGORY_MAP = {
+BACKLOG_WORK_ITEM_TYPE_CATEGORY_MAP = {
     WI_EPIC_TYPE.lower(): BACKLOG_EPIC_CATEGORY,
     WI_FEATURE_TYPE.lower(): BACKLOG_FEATURE_CATEGORY,
     WI_USER_STORY_TYPE.lower(): BACKLOG_REQUIREMENT_CATEGORY,
@@ -45,19 +45,19 @@ BACKLOG_WI_TYPE_CATEGORY_MAP = {
 
 
 def get_backlog_category_from_work_item_type(work_item_type: str) -> str:
-    return BACKLOG_WI_TYPE_CATEGORY_MAP[work_item_type.lower()]
+    return BACKLOG_WORK_ITEM_TYPE_CATEGORY_MAP[work_item_type.lower()]
 
 
 def get_work_item_type_from_backlog_category(backlog_category: str) -> str:
-    return BACKLOG_CATEGORY_WI_TYPE_MAP[backlog_category.lower()]
+    return BACKLOG_CATEGORY_WORK_ITEM_TYPE_MAP[backlog_category.lower()]
 
 
 LOGGER = logging.getLogger(__name__)
 
 
-class AbstractWorkItem:
-    PARENT_CLASS = Type['AbstractWorkItem']
-    WI_TYPE = None
+class BaseWorkItem:
+    PARENT_CLASS = Type['BaseWorkItem']
+    WORK_ITEM_TYPE = None
 
     PRINT_TITLE_LENGTH = 50
     PRINT_PARENT_PATH_SEP = ' > '
@@ -69,8 +69,8 @@ class AbstractWorkItem:
         work_client: WorkClient,
         team_context: TeamContext,
     ):
-        if self.WI_TYPE and work_item.fields[WI_ITEM_TYPE_KEY] != self.WI_TYPE:
-            raise ValueError(f'Work item {work_item.url} is not a {self.WI_TYPE}')
+        if self.WORK_ITEM_TYPE and work_item.fields[WI_ITEM_TYPE_KEY] != self.WORK_ITEM_TYPE:
+            raise ValueError(f'Work item {work_item.url} is not a {self.WORK_ITEM_TYPE}')
 
         self._work_item = work_item
         self._wit_client = wit_client
@@ -78,11 +78,13 @@ class AbstractWorkItem:
         self._team_context = team_context
 
         self._parent = None
+        self._own_backlog_rank = None
 
     def update(self):
         wi = self._wit_client.get_work_item(id=self.id, expand=WI_RELATIONS)
         self._work_item = wi
         self._parent = None
+        self._own_backlog_rank = None
 
     @property
     def id(self) -> int:
@@ -124,14 +126,22 @@ class AbstractWorkItem:
         return self._get_parent()
 
     @property
-    def item_path(self) -> tuple[str]:
-        if self.parent is None:
-            return (self.title,)
-        return (*self.parent.item_path, self.title)
+    def backlog_rank(self) -> int:
+        if self._own_backlog_rank is None:
+            backlog_category = get_backlog_category_from_work_item_type(self.WORK_ITEM_TYPE)
+            self._own_backlog_rank = get_work_item_backlog_rank(
+                work_item=self._work_item,
+                work_client=self._work_client,
+                team_context=self._team_context,
+                backlog_category=backlog_category,
+            )
+        return self._own_backlog_rank
 
     @property
-    def sort_key(self) -> tuple:
-        return self.priority, self.iteration_path, self.priority, self.item_path
+    def hierarchy(self) -> tuple['BaseWorkItem', ...]:
+        if self.parent is None:
+            return (self,)
+        return (*self.parent.hierarchy, self)
 
     def _get_field(self, field_name: str):
         return self._work_item.fields.get(field_name, None)
@@ -144,40 +154,47 @@ class AbstractWorkItem:
         if not wi:
             return None
 
-        self._parent = self.PARENT_CLASS(wi, self._wit_client)
+        self._parent = self.PARENT_CLASS(
+            work_item=wi,
+            wit_client=self._wit_client,
+            work_client=self._work_client,
+            team_context=self._team_context,
+        )
         return self._parent
 
     def __eq__(self, value):
         return self.id == value.id
 
     def __str__(self) -> str:
-        return f'[{self.id}] {self._normalized_title} | {self.iteration_path} | {self.PRINT_PARENT_PATH_SEP.join(self.item_path)}'  # noqa: E501
+        titles = [item.title for item in self.hierarchy]
+        title_path = self.PRINT_PARENT_PATH_SEP.join(titles)
+        return f'[{self.id}] {self._normalized_title} | {self.iteration_path} | {title_path}'
 
     def __repr__(self):
         return str(self)
 
 
-class Epic(AbstractWorkItem):
-    PARENT_CLASS = AbstractWorkItem
-    WI_TYPE = WI_EPIC_TYPE
+class Epic(BaseWorkItem):
+    PARENT_CLASS = BaseWorkItem
+    WORK_ITEM_TYPE = WI_EPIC_TYPE
 
 
-class Feature(AbstractWorkItem):
+class Feature(BaseWorkItem):
     PARENT_CLASS = Epic
-    WI_TYPE = WI_FEATURE_TYPE
+    WORK_ITEM_TYPE = WI_FEATURE_TYPE
 
 
-class UserStory(AbstractWorkItem):
+class UserStory(BaseWorkItem):
     PARENT_CLASS = Feature
-    WI_TYPE = WI_USER_STORY_TYPE
+    WORK_ITEM_TYPE = WI_USER_STORY_TYPE
 
     def __str__(self) -> str:
         return f'({self.priority}) {super().__str__()}'
 
 
-class Bug(AbstractWorkItem):
+class Bug(BaseWorkItem):
     PARENT_CLASS = Feature
-    WI_TYPE = WI_BUG_TYPE
+    WORK_ITEM_TYPE = WI_BUG_TYPE
 
     def __str__(self) -> str:
         return f'({self.priority}) {super().__str__()}'
@@ -185,7 +202,7 @@ class Bug(AbstractWorkItem):
 
 @dataclass
 class Backlog:
-    work_items: list[AbstractWorkItem]
+    work_items: list[BaseWorkItem]
 
     def update(self):
         for wi in self.work_items:
@@ -210,7 +227,7 @@ class Backlog:
         return '\n'.join(str(wi) for wi in self.work_items)
 
 
-def _get_parent_work_item(work_item: WorkItem, wit_client: WorkItemTrackingClient) -> Optional[AbstractWorkItem]:
+def _get_parent_work_item(work_item: WorkItem, wit_client: WorkItemTrackingClient) -> Optional[BaseWorkItem]:
     relations = work_item.relations
     if not relations:
         return None
@@ -249,7 +266,7 @@ def create_work_item_from_details(
     work_client: WorkClient,
     team_context: TeamContext,
     item_type: Optional[str] = None,
-) -> AbstractWorkItem:
+) -> BaseWorkItem:
     if item_type is None:
         item_type = work_item.fields[WI_ITEM_TYPE_KEY]
 

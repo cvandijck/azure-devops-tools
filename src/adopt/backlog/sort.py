@@ -6,16 +6,16 @@ from typing import Optional
 from azure.devops.v7_0.work import ReorderOperation, TeamContext, WorkClient
 from azure.devops.v7_0.work_item_tracking import WorkItemTrackingClient
 
-from adopt.utils import BACKLOG_REQUIREMENT_CATEGORY, AbstractWorkItem, Backlog, get_backlog
+from adopt.utils import BACKLOG_REQUIREMENT_CATEGORY, Backlog, BaseWorkItem, get_backlog
 
 LOGGER = logging.getLogger(__name__)
 
 
 @dataclass
 class Swap:
-    item: AbstractWorkItem
-    next_item: Optional[AbstractWorkItem]
-    previous_item: Optional[AbstractWorkItem]
+    item: BaseWorkItem
+    next_item: Optional[BaseWorkItem]
+    previous_item: Optional[BaseWorkItem]
 
     def __str__(self) -> str:
         prev_item, next_item = self.previous_item, self.next_item
@@ -36,24 +36,30 @@ class Swap:
         return self.previous_item.id if self.previous_item else 0
 
 
-def compare_work_items(item1: AbstractWorkItem, item2: AbstractWorkItem) -> int:
-    iter_parts_1 = item1.iteration_path.split('\\')
-    iter_parts_2 = item2.iteration_path.split('\\')
+def compare_work_items(item1: BaseWorkItem, item2: BaseWorkItem) -> int:
+    item1_iter_parts = item1.iteration_path.split('\\')
+    item2_iter_parts = item2.iteration_path.split('\\')
 
-    if len(iter_parts_1) == len(iter_parts_2):
+    item1_hierarchy = item1.hierarchy
+    item2_hierarchy = item2.hierarchy
+
+    item1_ranks = [item.backlog_rank for item in item1_hierarchy[:-1]]
+    item2_ranks = [item.backlog_rank for item in item2_hierarchy[:-1]]
+
+    if len(item1_iter_parts) == len(item2_iter_parts):
         # both in backlog or both in sprint
-        if iter_parts_1[-1] == iter_parts_2[-1]:
+        if item1_iter_parts[-1] == item2_iter_parts[-1]:
             # both in same sprint
             # sort by priority and full path (titles of parents and self)
-            sort_tuple_1 = (item1.priority, *item1.item_path)
-            sort_tuple_2 = (item2.priority, *item2.item_path)
+            sort_tuple_1 = (item1.priority, *item1_ranks)
+            sort_tuple_2 = (item2.priority, *item2_ranks)
             return -1 if sort_tuple_1 < sort_tuple_2 else 1
         else:
-            return -1 if iter_parts_1[-1] > iter_parts_2[-1] else 1
+            return -1 if item1_iter_parts[-1] > item2_iter_parts[-1] else 1
     else:
         # one in backlog and one in sprint
         # put sprint items first
-        return -1 if len(iter_parts_1) > len(iter_parts_2) else 1
+        return -1 if len(item1_iter_parts) > len(item2_iter_parts) else 1
 
 
 def sort_backlog(
