@@ -1,20 +1,21 @@
 import logging
 from dataclasses import dataclass
+from functools import cmp_to_key
 from typing import Optional
 
 from azure.devops.v7_0.work import ReorderOperation, TeamContext, WorkClient
 from azure.devops.v7_0.work_item_tracking import WorkItemTrackingClient
 
-from adopt.utils import BACKLOG_REQUIREMENT_CATEGORY, AbstractWorkItem, Backlog, get_backlog
+from adopt.utils import BACKLOG_REQUIREMENT_CATEGORY, Backlog, BaseWorkItem, get_backlog
 
 LOGGER = logging.getLogger(__name__)
 
 
 @dataclass
 class Swap:
-    item: AbstractWorkItem
-    next_item: Optional[AbstractWorkItem]
-    previous_item: Optional[AbstractWorkItem]
+    item: BaseWorkItem
+    next_item: Optional[BaseWorkItem]
+    previous_item: Optional[BaseWorkItem]
 
     def __str__(self) -> str:
         prev_item, next_item = self.previous_item, self.next_item
@@ -33,6 +34,32 @@ class Swap:
     @property
     def previous_id(self) -> int:
         return self.previous_item.id if self.previous_item else 0
+
+
+def compare_work_items(item1: BaseWorkItem, item2: BaseWorkItem) -> int:
+    item1_iter_parts = item1.iteration_path.split('\\')
+    item2_iter_parts = item2.iteration_path.split('\\')
+
+    item1_hierarchy = item1.hierarchy
+    item2_hierarchy = item2.hierarchy
+
+    item1_ranks = [item.backlog_rank for item in item1_hierarchy[:-1]]
+    item2_ranks = [item.backlog_rank for item in item2_hierarchy[:-1]]
+
+    if len(item1_iter_parts) == len(item2_iter_parts):
+        # both in backlog or both in sprint
+        if item1_iter_parts[-1] == item2_iter_parts[-1]:
+            # both in same sprint
+            # sort by priority and full path (titles of parents and self)
+            sort_tuple_1 = (item1.priority, *item1_ranks)
+            sort_tuple_2 = (item2.priority, *item2_ranks)
+            return -1 if sort_tuple_1 < sort_tuple_2 else 1
+        else:
+            return -1 if item1_iter_parts[-1] > item2_iter_parts[-1] else 1
+    else:
+        # one in backlog and one in sprint
+        # put sprint items first
+        return -1 if len(item1_iter_parts) > len(item2_iter_parts) else 1
 
 
 def sort_backlog(
@@ -54,7 +81,16 @@ def sort_backlog(
         LOGGER.debug(item)
 
     # Verify the order of user stories by priority
-    sorted_backlog = Backlog(sorted(backlog.work_items))
+    # rank_func = partial(
+    #     get_work_item_backlog_rank,
+    #     work_client=work_client,
+    #     team_context=team_context,
+    #     backlog_category=backlog_category,
+    # )
+    # compare_func = partial(compare_work_items, rank_func=rank_func)
+
+    sorted_work_items = sorted(backlog.work_items, key=cmp_to_key(compare_work_items))
+    sorted_backlog = Backlog(sorted_work_items)
 
     LOGGER.debug('Sorted backlog:')
     for item in sorted_backlog:
@@ -65,7 +101,7 @@ def sort_backlog(
         LOGGER.info('all user stories are in correct order')
         return
 
-    LOGGER.info('user stories are not in order of priority')
+    LOGGER.info('user stories are not in the correct order')
     reorder_backlog(backlog=backlog, target_backlog=sorted_backlog, work_client=work_client, team_context=team_context)
 
     new_backlog = get_backlog(
