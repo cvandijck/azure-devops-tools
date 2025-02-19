@@ -59,7 +59,7 @@ class BaseWorkItem:
     PARENT_CLASS = Type['BaseWorkItem']
     WORK_ITEM_TYPE = None
 
-    PRINT_TITLE_LENGTH = 50
+    PRINT_TITLE_LENGTH = 20
     PRINT_PARENT_PATH_SEP = ' > '
 
     def __init__(
