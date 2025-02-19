@@ -6,23 +6,47 @@ More information can be found on the project's [website](https://github.com/cvan
 
 ## Installation
 
-*Add information on how to install adopt.*
-
 You can install adopt via pip:
 ```console
 python -m pip install adopt
 ```
 
-## Getting Started
-
-*Add information on the typical use of adopt, either as library or as a console script.*
-
-Import the adopt library in python:
-```python
-import adopt
+Alternatively, you can install adopt as a CLI tool using pipx:
+```console
+pipx install adopt
 ```
 
-Display the help page of the console script:
+## Getting Started
+
+Adopt is developed as a CLI tool to easily manage your Azure Devops project.
+The tool is actively being developed and tools are continuously being added.
+
+You can discover which tools are available by displaying the help page of the console script:
+
 ```console
 adopt --help
 ```
+
+### Backlog
+
+These CLI tools help to manage your different backlogs in Azure Devops.
+
+#### Print
+
+Get a nicely formatted overview of your backlog in your terminal.
+
+```console
+adopt backlog print
+```
+
+#### Sort
+
+Tired of cleaning up your backlog by dragging work items each time you had a backlog refinement or planning session?
+With this short command you can automatically sort the backlog following the specific order you like.
+
+```console
+adopt backlog sort
+```
+
+
+

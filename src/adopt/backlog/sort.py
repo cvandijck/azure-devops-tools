@@ -1,6 +1,7 @@
 import logging
+import re
 from dataclasses import dataclass
-from functools import cmp_to_key
+from functools import cmp_to_key, partial
 from typing import Optional
 
 from azure.devops.v7_0.work import ReorderOperation, TeamContext, WorkClient
@@ -9,6 +10,18 @@ from azure.devops.v7_0.work_item_tracking import WorkItemTrackingClient
 from adopt.utils import BACKLOG_REQUIREMENT_CATEGORY, Backlog, BaseWorkItem, get_backlog
 
 LOGGER = logging.getLogger(__name__)
+
+VALID_SORT_KEY_ELEMENTS = [
+    'i',  # iteration path
+    'p',  # priority
+    't',  # title
+    'r',  # parents rank
+]
+VALID_SORT_KEY_ELEMENTS_ALL = [val for el in VALID_SORT_KEY_ELEMENTS for val in (el, el.upper())]
+VALID_SORT_KEY_STR = ', '.join(VALID_SORT_KEY_ELEMENTS_ALL[:-1]) + f' or {VALID_SORT_KEY_ELEMENTS_ALL[-1]}'
+VALID_SORT_KEY_REGEX = re.compile(rf'^[{"".join(VALID_SORT_KEY_ELEMENTS_ALL)}]+$')
+
+DEFAULT_SORT_KEY = 'IPtr'
 
 
 @dataclass
@@ -36,30 +49,68 @@ class Swap:
         return self.previous_item.id if self.previous_item else 0
 
 
-def compare_work_items(item1: BaseWorkItem, item2: BaseWorkItem) -> int:
-    item1_iter_parts = item1.iteration_path.split('\\')
-    item2_iter_parts = item2.iteration_path.split('\\')
+def _validate_sort_key(sort_key: str):
+    if not VALID_SORT_KEY_REGEX.match(sort_key):
+        raise ValueError(f'Invalid sort key "{sort_key}". Must be a combination of {VALID_SORT_KEY_STR}')
+    if len(set(sort_key.lower())) != len(sort_key.lower()):
+        raise ValueError(f'Duplicate sort key elements in "{sort_key}"')
 
-    item1_hierarchy = item1.hierarchy
-    item2_hierarchy = item2.hierarchy
 
-    item1_ranks = [item.backlog_rank for item in item1_hierarchy[:-1]]
-    item2_ranks = [item.backlog_rank for item in item2_hierarchy[:-1]]
+def _compare_attr(item1: BaseWorkItem, item2: BaseWorkItem, attr: str, ascending: bool) -> int:
+    item1_attr = getattr(item1, attr)
+    item2_attr = getattr(item2, attr)
 
-    if len(item1_iter_parts) == len(item2_iter_parts):
-        # both in backlog or both in sprint
-        if item1_iter_parts[-1] == item2_iter_parts[-1]:
-            # both in same sprint
-            # sort by priority and full path (titles of parents and self)
-            sort_tuple_1 = (item1.priority, *item1_ranks)
-            sort_tuple_2 = (item2.priority, *item2_ranks)
-            return -1 if sort_tuple_1 < sort_tuple_2 else 1
+    if item1_attr == item2_attr:
+        return 0
+
+    value = -1 if item1_attr < item2_attr else 1
+    if not ascending:
+        value *= -1
+
+    return value
+
+
+def _compare_rank(item1: BaseWorkItem, item2: BaseWorkItem, ascending: bool) -> int:
+    item1_parents_rank = [item.backlog_rank for item in item1.hierarchy[:-1]]
+    item2_parents_rank = [item.backlog_rank for item in item2.hierarchy[:-1]]
+
+    if item1_parents_rank == item2_parents_rank:
+        return 0
+
+    value = -1 if item1_parents_rank < item2_parents_rank else 1
+    if not ascending:
+        value *= -1
+
+    return value
+
+
+def compare_work_items(item1: BaseWorkItem, item2: BaseWorkItem, sort_key: str) -> int:
+    _validate_sort_key(sort_key)
+
+    result = 0
+    for key in sort_key:
+        ascending = key.islower()
+        key = key.lower()
+
+        if key == 'i':
+            result = _compare_attr(item1, item2, attr='iteration_path', ascending=ascending)
+        elif key == 'p':
+            result = _compare_attr(item1, item2, attr='priority', ascending=ascending)
+        elif key == 'r':
+            result = _compare_rank(item1, item2, ascending=ascending)
+        elif key == 't':
+            result = _compare_attr(item1, item2, attr='title', ascending=ascending)
         else:
-            return -1 if item1_iter_parts[-1] > item2_iter_parts[-1] else 1
-    else:
-        # one in backlog and one in sprint
-        # put sprint items first
-        return -1 if len(item1_iter_parts) > len(item2_iter_parts) else 1
+            raise ValueError(f'Invalid sort key "{key}"')
+
+        # keep comparing until we find a difference
+        if result != 0:
+            return result
+    return result
+
+
+def generate_sort_key_func(sort_key: str):
+    return cmp_to_key(partial(compare_work_items, sort_key=sort_key))
 
 
 def sort_backlog(
@@ -67,6 +118,7 @@ def sort_backlog(
     work_client: WorkClient,
     team_context: TeamContext,
     backlog_category: str = BACKLOG_REQUIREMENT_CATEGORY,
+    sort_key: str = DEFAULT_SORT_KEY,
 ) -> Backlog:
     # Get the work items in the current sprint
     backlog = get_backlog(
@@ -80,16 +132,8 @@ def sort_backlog(
     for item in backlog:
         LOGGER.debug(item)
 
-    # Verify the order of user stories by priority
-    # rank_func = partial(
-    #     get_work_item_backlog_rank,
-    #     work_client=work_client,
-    #     team_context=team_context,
-    #     backlog_category=backlog_category,
-    # )
-    # compare_func = partial(compare_work_items, rank_func=rank_func)
-
-    sorted_work_items = sorted(backlog.work_items, key=cmp_to_key(compare_work_items))
+    key_func = generate_sort_key_func(sort_key=sort_key)
+    sorted_work_items = sorted(backlog.work_items, key=key_func)
     sorted_backlog = Backlog(sorted_work_items)
 
     LOGGER.debug('Sorted backlog:')
@@ -102,7 +146,12 @@ def sort_backlog(
         return
 
     LOGGER.info('user stories are not in the correct order')
-    reorder_backlog(backlog=backlog, target_backlog=sorted_backlog, work_client=work_client, team_context=team_context)
+    reorder_backlog(
+        backlog=backlog,
+        target_backlog=sorted_backlog,
+        work_client=work_client,
+        team_context=team_context,
+    )
 
     new_backlog = get_backlog(
         wit_client=wit_client,
@@ -121,20 +170,20 @@ def sort_backlog(
 def reorder_backlog(
     backlog: Backlog, target_backlog: Backlog, work_client: WorkClient, team_context: TeamContext
 ) -> Backlog:
-    swaps = compute_swaps(backlog=backlog, target=target_backlog)
+    swaps = _compute_swaps(backlog=backlog, target=target_backlog)
     for swap in swaps:
         LOGGER.info(f'Apply swap {swap}')
         _apply_swap_on_azure(swap=swap, work_client=work_client, team_context=team_context)
 
 
 def reorder_backlog_local(backlog: Backlog, target_backlog: Backlog) -> Backlog:
-    swaps = compute_swaps(backlog=backlog, target=target_backlog)
+    swaps = _compute_swaps(backlog=backlog, target=target_backlog)
     for swap in swaps:
         LOGGER.info(f'Apply swap {swap}')
         _apply_swap_on_backlog(swap=swap, backlog=backlog)
 
 
-def compute_swaps(backlog: Backlog, target: Backlog) -> list[Swap]:
+def _compute_swaps(backlog: Backlog, target: Backlog) -> list[Swap]:
     swaps = []
 
     current_backlog = backlog.copy()
