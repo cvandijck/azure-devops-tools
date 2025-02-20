@@ -1,3 +1,6 @@
+# config
+.adopt
+
 # CI CD
 _build
 
