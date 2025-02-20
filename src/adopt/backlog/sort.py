@@ -23,6 +23,8 @@ VALID_SORT_KEY_REGEX = re.compile(rf'^[{"".join(VALID_SORT_KEY_ELEMENTS_ALL)}]+$
 
 DEFAULT_SORT_KEY = 'IPrt'
 
+MAX_RANK = 1e3
+
 
 @dataclass
 class Swap:
@@ -74,7 +76,9 @@ def _compare_rank(item1: BaseWorkItem, item2: BaseWorkItem, ascending: bool) -> 
     item1_parents_rank = [item.backlog_rank for item in item1.hierarchy[:-1]]
     item2_parents_rank = [item.backlog_rank for item in item2.hierarchy[:-1]]
 
-    item1_parents_rank = [rank for rank in item1_parents_rank if rank is not None]
+    # if a parent has no rank, we consider it to be at the end of the backlog
+    item1_parents_rank = [rank if rank is not None else MAX_RANK for rank in item1_parents_rank]
+    item2_parents_rank = [rank if rank is not None else MAX_RANK for rank in item2_parents_rank]
 
     if item1_parents_rank == item2_parents_rank:
         return 0
