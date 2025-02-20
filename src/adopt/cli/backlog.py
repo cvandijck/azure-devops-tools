@@ -3,6 +3,7 @@ import click
 from adopt.backlog.sort import DEFAULT_SORT_KEY, VALID_SORT_KEY_STR, sort_backlog
 from adopt.cli import log_option, project_option, team_option, token_option, url_option
 from adopt.connect import create_connection, get_work_client, get_work_item_tracking_client
+from adopt.formatting import format_backlog_as_table
 from adopt.logging import configure_logging, convert_logging_level
 from adopt.utils import create_team_context, get_backlog, get_backlog_category_from_work_item_type
 
@@ -66,5 +67,5 @@ def cli_print_backlog(url: str, token: str, project: str, team: str, category: s
         backlog_category=category,
     )
 
-    # TODO: add color to the print
-    print(backlog)
+    table = format_backlog_as_table(backlog)
+    print(table)

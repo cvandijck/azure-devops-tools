@@ -126,7 +126,7 @@ class BaseWorkItem:
         return self._get_parent()
 
     @property
-    def backlog_rank(self) -> int:
+    def backlog_rank(self) -> Optional[int]:
         if self._own_backlog_rank is None:
             backlog_category = get_backlog_category_from_work_item_type(self.WORK_ITEM_TYPE)
             self._own_backlog_rank = get_work_item_backlog_rank(
@@ -241,14 +241,15 @@ def _get_parent_work_item(work_item: WorkItem, wit_client: WorkItemTrackingClien
 
 def get_work_item_backlog_rank(
     work_item: WorkItem, work_client: WorkClient, team_context: TeamContext, backlog_category: str
-) -> int:
+) -> Optional[int]:
     backlog_work_items = work_client.get_backlog_level_work_items(
         team_context=team_context, backlog_id=backlog_category
     ).work_items
 
     backlog_work_item_ids = [wi.target.id for wi in backlog_work_items]
     if work_item.id not in backlog_work_item_ids:
-        raise ValueError(f'Work item {work_item.id} is not in the backlog')
+        LOGGER.warning(f'Work item {work_item.id} is not in the backlog')
+        return None
     return backlog_work_item_ids.index(work_item.id) + 1
 
 

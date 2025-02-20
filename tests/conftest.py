@@ -4,7 +4,7 @@ from pathlib import Path
 import pytest
 from dotenv import load_dotenv
 
-from adopt.env import PAT_ENV, PROJECT_ENV, TEAM_ENV, URL_ENV
+from adopt.config import ADO_ORG_URL_VAR, ADO_PAT_VAR, ADO_PROJECT_VAR, ADO_TEAM_VAR
 
 TEST_DIR = Path(__file__).parent
 PROJECT_DIR = TEST_DIR.parent
@@ -20,19 +20,19 @@ def load_test_env():
 
 @pytest.fixture(scope='session')
 def url(load_test_env):
-    return os.environ[URL_ENV]
+    return os.environ[ADO_ORG_URL_VAR]
 
 
 @pytest.fixture(scope='session')
 def token(load_test_env):
-    return os.environ[PAT_ENV]
+    return os.environ[ADO_PAT_VAR]
 
 
 @pytest.fixture(scope='session')
 def project(load_test_env):
-    return os.environ[PROJECT_ENV]
+    return os.environ[ADO_PROJECT_VAR]
 
 
 @pytest.fixture(scope='session')
 def team(load_test_env):
-    return os.environ[TEAM_ENV]
+    return os.environ[ADO_TEAM_VAR]

@@ -21,7 +21,9 @@ VALID_SORT_KEY_ELEMENTS_ALL = [val for el in VALID_SORT_KEY_ELEMENTS for val in 
 VALID_SORT_KEY_STR = ', '.join(VALID_SORT_KEY_ELEMENTS_ALL[:-1]) + f' or {VALID_SORT_KEY_ELEMENTS_ALL[-1]}'
 VALID_SORT_KEY_REGEX = re.compile(rf'^[{"".join(VALID_SORT_KEY_ELEMENTS_ALL)}]+$')
 
-DEFAULT_SORT_KEY = 'IPtr'
+DEFAULT_SORT_KEY = 'IPrt'
+
+MAX_RANK = 1e3
 
 
 @dataclass
@@ -73,6 +75,10 @@ def _compare_attr(item1: BaseWorkItem, item2: BaseWorkItem, attr: str, ascending
 def _compare_rank(item1: BaseWorkItem, item2: BaseWorkItem, ascending: bool) -> int:
     item1_parents_rank = [item.backlog_rank for item in item1.hierarchy[:-1]]
     item2_parents_rank = [item.backlog_rank for item in item2.hierarchy[:-1]]
+
+    # if a parent has no rank, we consider it to be at the end of the backlog
+    item1_parents_rank = [rank if rank is not None else MAX_RANK for rank in item1_parents_rank]
+    item2_parents_rank = [rank if rank is not None else MAX_RANK for rank in item2_parents_rank]
 
     if item1_parents_rank == item2_parents_rank:
         return 0
