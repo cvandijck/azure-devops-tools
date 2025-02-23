@@ -23,14 +23,7 @@ dependencies = ['azure-devops', 'python-dotenv', 'click', 'prettytable']
 dynamic = ['version']
 
 [project.optional-dependencies]
-dev = [
-    'build',
-    'twine',
-    'pytest',
-    'pytest-cov',
-    'pre-commit',
-    'sphinx_rtd_theme',
-]
+dev = ['build', 'twine', 'pytest', 'pytest-cov', 'pre-commit']
 
 [project.scripts]
 'adopt' = 'adopt.__main__:main'
