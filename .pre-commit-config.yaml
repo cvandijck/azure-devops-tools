@@ -1,13 +1,18 @@
 repos:
+  - repo: https://github.com/astral-sh/uv-pre-commit
+    rev: 0.5.8 # uv version of winget
+    hooks:
+      - id: uv-lock
+
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v4.5.0
     hooks:
       - id: no-commit-to-branch
-        args: [ '--branch', 'main', '--branch', 'master' ]
+        args: ["--branch", "main", "--branch", "master"]
         fail_fast: true
       - id: check-toml
       - id: check-yaml
-        args: [ --unsafe ]
+        args: [--unsafe]
       - id: detect-private-key
       - id: check-added-large-files
 
@@ -15,5 +20,5 @@ repos:
     rev: v0.4.4
     hooks:
       - id: ruff
-        args: [ '--fix' ]
+        args: ["--fix"]
       - id: ruff-format
