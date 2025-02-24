@@ -7,6 +7,9 @@ on:
     branches:
       - main
 
+permissions:
+  contents: write
+
 jobs:
   build:
     name: Build
@@ -15,19 +18,40 @@ jobs:
       python-version: "3.11" # cannot be environment variable, limitation of workflow
 
   check-tag:
-    needs: build
     name: Check
+    needs: build
     uses: ./.github/workflows/_check_tag.yaml
     with:
       continue-on-error: false
 
   publish:
-    needs: check-tag
+    # not possible to do in a reusable component with trusted publishers
     name: Publish
-    uses: ./.github/workflows/_publish.yaml
+    needs: check-tag
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+    environment:
+      name: pypi
+      url: https://pypi.org/project/adopt
+    steps:
+      - name: Clean dist
+        run: |
+          rm -rf dist/
+
+      - name: Retrieve data
+        uses: actions/download-artifact@v4
+        with:
+          name: wheel
+          path: dist/wheel
+
+      - name: Publish to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          packages-dir: dist/wheel
 
   release:
-    needs: publish
     name: Release
+    needs: publish
     uses: ./.github/workflows/_release.yaml
     secrets: inherit # inherit all secrets if required for testing
