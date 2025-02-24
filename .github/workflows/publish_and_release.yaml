@@ -6,8 +6,6 @@ on:
   push:
     branches:
       - main
-  pull_request:
-    branches: ["main"]
 
 jobs:
   build:
@@ -29,7 +27,7 @@ jobs:
     uses: ./.github/workflows/_publish.yaml
 
   release:
-    needs: check-tag
+    needs: publish
     name: Release
     uses: ./.github/workflows/_release.yaml
     secrets: inherit # inherit all secrets if required for testing

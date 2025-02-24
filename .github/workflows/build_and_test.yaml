@@ -1,6 +1,6 @@
 # Build and install package and run tests
 
-name: Build test and install
+name: Build, Test and Install
 
 on:
   pull_request:
