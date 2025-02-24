@@ -34,7 +34,7 @@ jobs:
           files: dist/wheel/*
           name: Release ${{ env.VERSION }}
           tag_name: ${{ env.VERSION }}
-          body: Releasing ${{ env.VERSION }} # TODO: Add release notes
+          body: Releasing ${{ env.VERSION }} # TODO: Add release notes from CHANGELOG.md
           draft: false
           prerelease: false
           token: ${{ secrets.GITHUB_TOKEN }}
