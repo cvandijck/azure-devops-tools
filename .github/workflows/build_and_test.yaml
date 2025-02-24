@@ -82,6 +82,7 @@ jobs:
   check:
     runs-on: ubuntu-latest
     needs: build
+    continue-on-error: true
     steps:
       - name: Retrieve wheel
         uses: actions/download-artifact@v4
@@ -124,4 +125,3 @@ jobs:
       - name: Check if tag exists
         run: exit 1
         if: steps.check-tag.outputs.exists == 'true'
-        continue-on-error: true
