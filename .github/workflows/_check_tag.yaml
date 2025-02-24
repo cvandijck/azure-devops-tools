@@ -2,7 +2,7 @@ on:
   workflow_call:
     inputs:
       continue-on-error:
-        required: false
+        required: true
         type: boolean
 
 jobs:
@@ -52,3 +52,9 @@ jobs:
       - name: Check if tag exists
         run: exit 1
         if: steps.check-tag.outputs.exists == 'true'
+
+      - name: Upload wheel
+        uses: actions/upload-artifact@v4
+        with:
+          name: version
+          path: version.txt
