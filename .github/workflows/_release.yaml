@@ -28,13 +28,13 @@ jobs:
         run: |
           echo "VERSION=$(cat dist/version.txt)" >> $GITHUB_ENV
 
-      - name: Create GitHub Release
-        uses: softprops/action-gh-release@v1
-        with:
-          files: dist/wheel/*
-          name: Release ${{ env.VERSION }}
-          tag_name: ${{ env.VERSION }}
-          body: Releasing ${{ env.VERSION }} # TODO: Add release notes
-          draft: false
-          prerelease: false
-          token: ${{ secrets.GITHUB_TOKEN }}
+      # - name: Create GitHub Release
+      #   uses: softprops/action-gh-release@v1
+      #   with:
+      #     files: dist/wheel/*
+      #     name: Release ${{ env.VERSION }}
+      #     tag_name: ${{ env.VERSION }}
+      #     body: Releasing ${{ env.VERSION }} # TODO: Add release notes
+      #     draft: false
+      #     prerelease: false
+      #     token: ${{ secrets.GITHUB_TOKEN }}
