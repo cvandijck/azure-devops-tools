@@ -2,14 +2,15 @@ on: workflow_call
 
 permissions:
   contents: write
+  id-token: write
 
 jobs:
   release:
     name: Release
     runs-on: ubuntu-latest
     permissions:
-      id-token: write
       contents: write
+      id-token: write
     steps:
       - name: Clean dist
         run: |
