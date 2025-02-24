@@ -18,7 +18,7 @@ jobs:
   build:
     uses: ./.github/workflows/_build.yaml
     with:
-      python-version: $PYTHON_VERSION
+      python-version: ${{ env.PYTHON_VERSION }}
 
   test:
     needs: build
