@@ -11,14 +11,11 @@ on:
 permissions:
   contents: read
 
-env:
-  PYTHON_VERSION: "3.11"
-
 jobs:
   build:
     uses: ./.github/workflows/_build.yaml
     with:
-      python-version: ${{ env.PYTHON_VERSION }}
+      python-version: "3.11" # cannot be environment variable, limitation of workflow
 
   test:
     needs: build
