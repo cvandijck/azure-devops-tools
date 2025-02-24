@@ -20,6 +20,7 @@ jobs:
     needs: build
     name: Test
     uses: ./.github/workflows/_test.yaml
+    secrets: inherit
 
   check-tag:
     needs: build
