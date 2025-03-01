@@ -126,7 +126,6 @@ def sort_backlog(
     backlog_category: str = BACKLOG_REQUIREMENT_CATEGORY,
     sort_key: str = DEFAULT_SORT_KEY,
 ) -> Backlog:
-    # Get the work items in the current sprint
     backlog = get_backlog(
         wit_client=wit_client,
         work_client=work_client,

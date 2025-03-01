@@ -1,14 +1,18 @@
 import logging
 from dataclasses import dataclass
+from enum import Enum
 from typing import Optional, Type
 
 from azure.devops.v7_0.work import TeamContext, WorkClient
 from azure.devops.v7_0.work_item_tracking import WorkItem, WorkItemTrackingClient
 
+LOGGER = logging.getLogger(__name__)
+
 # backlog categories
 BACKLOG_EPIC_CATEGORY = 'Microsoft.EpicCategory'
 BACKLOG_FEATURE_CATEGORY = 'Microsoft.FeatureCategory'
 BACKLOG_REQUIREMENT_CATEGORY = 'Microsoft.RequirementCategory'
+ORDENED_BACKLOG_CATEGORIES = (BACKLOG_EPIC_CATEGORY, BACKLOG_FEATURE_CATEGORY, BACKLOG_REQUIREMENT_CATEGORY)
 
 # work item fields
 WI_ID_KEY = 'System.Id'
@@ -18,9 +22,11 @@ WI_ITEM_TYPE_KEY = 'System.WorkItemType'
 WI_ITERATION_PATH_KEY = 'System.IterationPath'
 WI_STORY_POINTS_KEY = 'Microsoft.VSTS.Scheduling.StoryPoints'
 WI_ASSIGNED_TO_KEY = 'System.AssignedTo'
+WI_STATE_KEY = 'System.State'
 
-WI_PARENT_RELATION = 'System.LinkTypes.Hierarchy-Reverse'
 WI_RELATIONS = 'Relations'
+WI_PARENT_RELATION = 'System.LinkTypes.Hierarchy-Reverse'
+WI_CHILD_RELATION = 'System.LinkTypes.Hierarchy-Forward'
 
 # work item types
 WI_EPIC_TYPE = 'Epic'
@@ -30,9 +36,9 @@ WI_USER_STORY_TYPE_2 = 'Story'
 WI_BUG_TYPE = 'Bug'
 
 BACKLOG_CATEGORY_WORK_ITEM_TYPE_MAP = {
-    BACKLOG_EPIC_CATEGORY.lower(): WI_EPIC_TYPE,
-    BACKLOG_FEATURE_CATEGORY.lower(): WI_FEATURE_TYPE,
-    BACKLOG_REQUIREMENT_CATEGORY.lower(): WI_USER_STORY_TYPE,  # can also be bug
+    BACKLOG_EPIC_CATEGORY.lower(): (WI_EPIC_TYPE,),
+    BACKLOG_FEATURE_CATEGORY.lower(): (WI_FEATURE_TYPE,),
+    BACKLOG_REQUIREMENT_CATEGORY.lower(): (WI_USER_STORY_TYPE, WI_BUG_TYPE),
 }
 
 BACKLOG_WORK_ITEM_TYPE_CATEGORY_MAP = {
@@ -48,11 +54,19 @@ def get_backlog_category_from_work_item_type(work_item_type: str) -> str:
     return BACKLOG_WORK_ITEM_TYPE_CATEGORY_MAP[work_item_type.lower()]
 
 
-def get_work_item_type_from_backlog_category(backlog_category: str) -> str:
+def get_work_item_types_from_backlog_category(backlog_category: str) -> tuple[str, ...]:
     return BACKLOG_CATEGORY_WORK_ITEM_TYPE_MAP[backlog_category.lower()]
 
 
-LOGGER = logging.getLogger(__name__)
+def get_parent_backlog_categories(backlog_category: str) -> tuple[str]:
+    return ORDENED_BACKLOG_CATEGORIES[: ORDENED_BACKLOG_CATEGORIES.index(backlog_category)]
+
+
+class State(str, Enum):
+    NEW = 'New'
+    ACTIVE = 'Active'
+    RESOLVED = 'Resolved'
+    CLOSED = 'Closed'
 
 
 class BaseWorkItem:
@@ -78,13 +92,19 @@ class BaseWorkItem:
         self._team_context = team_context
 
         self._parent = None
+        self._children = None
         self._own_backlog_rank = None
 
     def update(self):
         wi = self._wit_client.get_work_item(id=self.id, expand=WI_RELATIONS)
         self._work_item = wi
         self._parent = None
+        self._children = None
         self._own_backlog_rank = None
+
+    @property
+    def azure_work_item(self) -> WorkItem:
+        return self._work_item
 
     @property
     def id(self) -> int:
@@ -106,12 +126,20 @@ class BaseWorkItem:
         return f'{title: <{self.PRINT_TITLE_LENGTH}}'
 
     @property
+    def item_type(self) -> str:
+        return self._get_field(WI_ITEM_TYPE_KEY)
+
+    @property
     def iteration_path(self) -> str:
-        return self._work_item.fields[WI_ITERATION_PATH_KEY]
+        return self._get_field(WI_ITERATION_PATH_KEY)
 
     @property
     def assigned_to(self) -> Optional[str]:
         return self._get_field(WI_ASSIGNED_TO_KEY)
+
+    @property
+    def state(self) -> str:
+        return self._get_field(WI_STATE_KEY)
 
     @property
     def story_points(self) -> int:
@@ -122,8 +150,12 @@ class BaseWorkItem:
         return self._get_field(WI_PRIORITY_KEY)
 
     @property
-    def parent(self):
+    def parent(self) -> Optional['BaseWorkItem']:
         return self._get_parent()
+
+    @property
+    def children(self) -> Optional[list['BaseWorkItem']]:
+        return self._get_children()
 
     @property
     def backlog_rank(self) -> Optional[int]:
@@ -161,6 +193,25 @@ class BaseWorkItem:
             team_context=self._team_context,
         )
         return self._parent
+
+    def _get_children(self):
+        if self._children is not None:
+            return self._children
+
+        children = _get_children_work_items(self._work_item, self._wit_client)
+        if children is None:
+            return None
+
+        self._children = [
+            create_work_item_from_details(
+                work_item=child,
+                wit_client=self._wit_client,
+                work_client=self._work_client,
+                team_context=self._team_context,
+            )
+            for child in children
+        ]
+        return self._children
 
     def __eq__(self, value):
         return self.id == value.id
@@ -239,6 +290,20 @@ def _get_parent_work_item(work_item: WorkItem, wit_client: WorkItemTrackingClien
     return None
 
 
+def _get_children_work_items(work_item: WorkItem, wit_client: WorkItemTrackingClient) -> Optional[list[BaseWorkItem]]:
+    relations = work_item.relations
+    if not relations:
+        return None
+
+    children = []
+    for relation in relations:
+        if relation.rel == WI_CHILD_RELATION:
+            child_id = relation.url.split('/')[-1]
+            child = wit_client.get_work_item(id=child_id, expand=WI_RELATIONS)
+            children.append(child)
+    return children
+
+
 def get_work_item_backlog_rank(
     work_item: WorkItem, work_client: WorkClient, team_context: TeamContext, backlog_category: str
 ) -> Optional[int]:
@@ -281,6 +346,23 @@ def create_work_item_from_details(
         return Epic(work_item, wit_client, work_client, team_context)
     else:
         raise ValueError(f'Unknown work item type: {item_type}')
+
+
+def update_work_item_field(
+    work_item: WorkItem,
+    wit_client: WorkItemTrackingClient,
+    field: str,
+    value: str,
+    operation: str = 'replace',
+) -> None:
+    document = [
+        {
+            'op': operation,
+            'path': f'/fields/{field}',
+            'value': value,
+        }
+    ]
+    wit_client.update_work_item(document=document, id=work_item.id)
 
 
 def get_backlog(
