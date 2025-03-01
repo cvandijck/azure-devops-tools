@@ -1,5 +1,6 @@
 import click
 
+from adopt.cli.backlog.check import cli_check_backlog
 from adopt.cli.backlog.fix import cli_fix_backlog
 from adopt.cli.backlog.print import cli_print_backlog
 from adopt.cli.backlog.sort import cli_sort_backlog
@@ -15,3 +16,4 @@ def cli_backlog():
 cli_backlog.add_command(cli_print_backlog)
 cli_backlog.add_command(cli_sort_backlog)
 cli_backlog.add_command(cli_fix_backlog)
+cli_backlog.add_command(cli_check_backlog)
