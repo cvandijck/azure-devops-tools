@@ -5,10 +5,10 @@ jobs:
     name: Test wheel
     runs-on: ubuntu-latest
     env: # load here all relevant environment variables
-      AZURE_DEVOPS_PAT: ${{ secrets.AZURE_DEVOPS_PAT }}
-      AZURE_DEVOPS_ORGANIZATION_URL: ${{ vars.AZURE_DEVOPS_ORGANIZATION_URL }}
-      AZURE_DEVOPS_PROJECT_NAME: ${{ vars.AZURE_DEVOPS_PROJECT_NAME }}
-      AZURE_DEVOPS_TEAM_NAME: ${{ vars.AZURE_DEVOPS_TEAM_NAME }}
+      ADOPT_AZURE_DEVOPS_PAT: ${{ secrets.AZURE_DEVOPS_PAT }}
+      ADOPT_AZURE_DEVOPS_ORGANIZATION_URL: ${{ vars.AZURE_DEVOPS_ORGANIZATION_URL }}
+      ADOPT_AZURE_DEVOPS_PROJECT_NAME: ${{ vars.AZURE_DEVOPS_PROJECT_NAME }}
+      ADOPT_AZURE_DEVOPS_TEAM_NAME: ${{ vars.AZURE_DEVOPS_TEAM_NAME }}
     strategy:
       matrix:
         python-version: ["3.9", "3.10", "3.11", "3.12", "3.13"] # remove versions that are not supported
