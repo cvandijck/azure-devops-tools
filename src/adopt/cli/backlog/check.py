@@ -2,7 +2,7 @@ import logging
 
 import click
 
-from adopt.backlog.check import check_all_items_assigned, check_all_items_have_points
+from adopt.backlog.check import check_all_items_assigned, check_all_items_have_points, check_if_all_items_have_parent
 from adopt.cli.backlog.options import category_option
 from adopt.cli.options import CONTEXT_SETTINGS, log_option, project_option, team_option, token_option, url_option
 from adopt.connect import create_connection, get_work_client, get_work_item_tracking_client
@@ -12,6 +12,7 @@ from adopt.utils import create_team_context, get_backlog_category_from_work_item
 LOGGER = logging.getLogger(__name__)
 
 check_all = click.option('--check-all', help='Check for all issues', is_flag=True)
+check_parent = click.option('--check-parent', help='Check if all items are assigned', is_flag=True)
 check_assigned = click.option('--check-assigned', help='Check if all items are assigned', is_flag=True)
 check_points = click.option('--check-points', help='Check if all items have story points', is_flag=True)
 
@@ -23,6 +24,7 @@ check_points = click.option('--check-points', help='Check if all items have stor
 @team_option
 @category_option
 @check_all
+@check_parent
 @check_assigned
 @check_points
 @log_option
@@ -45,6 +47,15 @@ def cli_check_backlog(
     work_client = get_work_client(connection=connection)
     team_context = create_team_context(project=project, team=team)
     category = get_backlog_category_from_work_item_type(work_item_type=category)
+
+    if check_all or check_parent:
+        LOGGER.info('Checking if all items have a parent')
+        check_if_all_items_have_parent(
+            wit_client=wit_client,
+            work_client=work_client,
+            team_context=team_context,
+            backlog_category=category,
+        )
 
     if check_all or check_assigned:
         LOGGER.info('Checking if all items are assigned')
