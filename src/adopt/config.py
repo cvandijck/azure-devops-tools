@@ -73,6 +73,8 @@ def _load_env_configuration() -> dict:
     return dotenv_values(env_file)
 
 
+# TODO: logging here is not affected by the provided log level as it is
+# executed before the logging is configured in a command
 def initialize_configuration():
     """Initialize the configuration for the Azure DevOps project.
 
