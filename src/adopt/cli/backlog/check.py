@@ -35,6 +35,7 @@ def cli_check_backlog(
     team: str,
     category: str,
     check_all: bool,
+    check_parent: bool,
     check_assigned: bool,
     check_points: bool,
     log_level: str,

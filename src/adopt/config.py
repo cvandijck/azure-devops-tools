@@ -10,6 +10,13 @@ ADO_ORG_URL_VAR = 'ADOPT_AZURE_DEVOPS_ORGANIZATION_URL'
 ADO_PROJECT_VAR = 'ADOPT_AZURE_DEVOPS_PROJECT_NAME'
 ADO_TEAM_VAR = 'ADOPT_AZURE_DEVOPS_TEAM_NAME'
 
+CONFIG_ENV_MAPPING = {
+    'token': ADO_PAT_VAR,
+    'url': ADO_ORG_URL_VAR,
+    'project': ADO_PROJECT_VAR,
+    'team': ADO_TEAM_VAR,
+}
+
 CONFIG_FILE_NAME = '.adopt'
 ADOPT_CONFIG_SECTION = 'adopt'
 
@@ -19,7 +26,10 @@ LOGGER = logging.getLogger(__name__)
 def _load_config_in_environment(config: dict[str, str]):
     for key, value in config.items():
         if value is not None:
-            os.environ[key] = value
+            env_var = CONFIG_ENV_MAPPING.get(key, key)
+
+            LOGGER.warning(f'Setting environment variable {env_var}={value}')
+            os.environ[env_var] = value
 
 
 def _load_configuration_from_file(file_path: Path) -> dict:
@@ -63,6 +73,8 @@ def _load_env_configuration() -> dict:
     return dotenv_values(env_file)
 
 
+# TODO: logging here is not affected by the provided log level as it is
+# executed before the logging is configured in a command
 def initialize_configuration():
     """Initialize the configuration for the Azure DevOps project.
 
