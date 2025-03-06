@@ -27,8 +27,6 @@ def _load_config_in_environment(config: dict[str, str]):
     for key, value in config.items():
         if value is not None:
             env_var = CONFIG_ENV_MAPPING.get(key, key)
-
-            LOGGER.warning(f'Setting environment variable {env_var}={value}')
             os.environ[env_var] = value
 
 
