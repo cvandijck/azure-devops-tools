@@ -19,7 +19,7 @@ classifiers = [
     'Intended Audience :: Developers',
     'Programming Language :: Python :: 3',
 ]
-dependencies = ['azure-devops', 'python-dotenv', 'click', 'prettytable']
+dependencies = ['azure-devops', 'python-dotenv', 'click', 'prettytable', 'toml']
 dynamic = ['version']
 
 [dependency-groups]

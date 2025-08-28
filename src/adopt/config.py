@@ -1,8 +1,8 @@
-import configparser
 import logging
 import os
 from pathlib import Path
 
+import toml
 from dotenv import dotenv_values, find_dotenv
 
 ADO_PAT_VAR = 'ADOPT_AZURE_DEVOPS_PAT'
@@ -31,16 +31,9 @@ def _load_config_in_environment(config: dict[str, str]):
 
 
 def _load_configuration_from_file(file_path: Path) -> dict:
-    config = configparser.ConfigParser()
-    config.read(file_path)
-
-    config_dict = {}
-
-    general_config = dict(config.items(ADOPT_CONFIG_SECTION))
-    config_dict.update(general_config)
-
+    config_dict = toml.load(file_path)
     # TODO: Add specific configuration for each command
-    return config_dict
+    return config_dict['adopt']
 
 
 def _load_global_configuration() -> dict:
