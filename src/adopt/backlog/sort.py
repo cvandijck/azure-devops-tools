@@ -6,6 +6,7 @@ from typing import Optional
 
 from azure.devops.v7_0.work import ReorderOperation, TeamContext, WorkClient
 from azure.devops.v7_0.work_item_tracking import WorkItemTrackingClient
+from contexttimer import timer
 
 from adopt.utils import BACKLOG_REQUIREMENT_CATEGORY, Backlog, BaseWorkItem, get_backlog
 
@@ -15,7 +16,7 @@ VALID_SORT_KEY_ELEMENTS = [
     'i',  # iteration path
     'p',  # priority
     't',  # title
-    'r',  # parents rank
+    'r',  # rank
 ]
 VALID_SORT_KEY_ELEMENTS_ALL = [val for el in VALID_SORT_KEY_ELEMENTS for val in (el, el.upper())]
 VALID_SORT_KEY_STR = ', '.join(VALID_SORT_KEY_ELEMENTS_ALL[:-1]) + f' or {VALID_SORT_KEY_ELEMENTS_ALL[-1]}'
@@ -73,8 +74,8 @@ def _compare_attr(item1: BaseWorkItem, item2: BaseWorkItem, attr: str, ascending
 
 
 def _compare_rank(item1: BaseWorkItem, item2: BaseWorkItem, ascending: bool) -> int:
-    item1_parents_rank = [item.backlog_rank for item in item1.hierarchy[:-1]]
-    item2_parents_rank = [item.backlog_rank for item in item2.hierarchy[:-1]]
+    item1_parents_rank = [item.backlog_rank for item in item1.hierarchy]
+    item2_parents_rank = [item.backlog_rank for item in item2.hierarchy]
 
     # if a parent has no rank, we consider it to be at the end of the backlog
     item1_parents_rank = [rank if rank is not None else MAX_RANK for rank in item1_parents_rank]
@@ -119,6 +120,7 @@ def generate_sort_key_func(sort_key: str):
     return cmp_to_key(partial(compare_work_items, sort_key=sort_key))
 
 
+@timer(logger=LOGGER, level=logging.INFO, fmt='Sorted backlog in %(execution_time).2s')
 def sort_backlog(
     wit_client: WorkItemTrackingClient,
     work_client: WorkClient,
@@ -148,8 +150,8 @@ def sort_backlog(
     is_in_order = backlog == sorted_backlog
     if is_in_order:
         LOGGER.info('all user stories are in correct order')
-        return
-
+        return backlog
+    return backlog
     LOGGER.info('user stories are not in the correct order')
     reorder_backlog(
         backlog=backlog,
@@ -174,7 +176,7 @@ def sort_backlog(
 
 def reorder_backlog(
     backlog: Backlog, target_backlog: Backlog, work_client: WorkClient, team_context: TeamContext
-) -> Backlog:
+) -> None:
     swaps = _compute_swaps(backlog=backlog, target=target_backlog)
     for swap in swaps:
         LOGGER.info(f'Apply swap {swap}')
