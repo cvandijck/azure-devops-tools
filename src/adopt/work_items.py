@@ -6,7 +6,7 @@ from typing import Optional
 from azure.devops.v7_0.work import TeamContext, WorkClient
 from azure.devops.v7_0.work_item_tracking import WorkItem, WorkItemTrackingClient
 
-from adopt.connect import (
+from adopt.azure_devops import (
     BACKLOG_REQUIREMENT_CATEGORY,
     WI_ASSIGNED_TO_KEY,
     WI_BUG_TYPE,

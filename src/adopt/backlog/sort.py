@@ -8,8 +8,8 @@ from azure.devops.v7_0.work import ReorderOperation, TeamContext, WorkClient
 from azure.devops.v7_0.work_item_tracking import WorkItemTrackingClient
 from contexttimer import timer
 
-from adopt.connect import load_work_items_in_caches
-from adopt.utils import BACKLOG_REQUIREMENT_CATEGORY, Backlog, BaseWorkItem, get_backlog
+from adopt.azure_devops import load_work_items_in_caches
+from adopt.work_items import BACKLOG_REQUIREMENT_CATEGORY, Backlog, BaseWorkItem, get_backlog
 
 LOGGER = logging.getLogger(__name__)
 

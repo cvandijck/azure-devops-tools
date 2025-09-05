@@ -3,7 +3,7 @@ import logging
 from azure.devops.v7_0.work import TeamContext, WorkClient
 from azure.devops.v7_0.work_item_tracking import WorkItemTrackingClient
 
-from adopt.utils import BACKLOG_REQUIREMENT_CATEGORY, get_backlog
+from adopt.work_items import BACKLOG_REQUIREMENT_CATEGORY, get_backlog
 
 LOGGER = logging.getLogger(__name__)
 

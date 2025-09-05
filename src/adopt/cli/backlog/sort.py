@@ -1,11 +1,11 @@
 import click
 
+from adopt.azure_devops import create_connection, get_work_client, get_work_item_tracking_client
 from adopt.backlog.sort import DEFAULT_SORT_KEY, VALID_SORT_KEY_STR, sort_backlog
 from adopt.cli.backlog.options import category_option
 from adopt.cli.options import CONTEXT_SETTINGS, log_option, project_option, team_option, token_option, url_option
-from adopt.connect import create_connection, get_work_client, get_work_item_tracking_client
 from adopt.logging import configure_logging, convert_logging_level
-from adopt.utils import create_team_context, get_backlog_category_from_work_item_type
+from adopt.work_items import create_team_context, get_backlog_category_from_work_item_type
 
 sort_option = click.option(
     '--sort_key',

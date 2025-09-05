@@ -4,8 +4,8 @@ import sys
 
 import pytest
 
+from adopt.azure_devops import create_connection
 from adopt.config import ADO_ORG_URL_VAR, ADO_PAT_VAR
-from adopt.connect import create_connection
 
 PYTHON_EXE = sys.executable
 

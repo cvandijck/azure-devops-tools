@@ -1,8 +1,8 @@
 import pytest
 
+from adopt.azure_devops import create_connection, get_work_client, get_work_item_tracking_client
 from adopt.backlog.fix import fix_backlog_state
-from adopt.connect import create_connection, get_work_client, get_work_item_tracking_client
-from adopt.utils import create_team_context, get_backlog_category_from_work_item_type
+from adopt.work_items import create_team_context, get_backlog_category_from_work_item_type
 
 
 @pytest.mark.mutate
