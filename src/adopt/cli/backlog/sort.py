@@ -23,7 +23,6 @@ from adopt.work_items import (
 
 sort_option = click.option(
     '--sort_key',
-    '-s',
     help=f'Sort key [{VALID_SORT_KEY_STR}]',
     default=DEFAULT_SORT_KEY,
     required=True,

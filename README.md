@@ -17,7 +17,7 @@ or by following the instructions on the [uv website](https://docs.astral.sh/uv/)
 After installing `uv`, you can install `adopt` as a uv tool by running:
 
 ```console
-uv tool install adopt
+uv tool install adopt@latest
 ```
 
 and then run the tool by running:
@@ -129,10 +129,10 @@ Alternatively, a TOML-styled configuration file `.adopt` can be used locally in 
 
 ```toml
 [adopt]
-token=<azure_devops_personal_token>
-url=<azure_devops_org_url>
-project=<azure_devops_project>
-team=<azure_devops_team>
+token = "<azure_devops_personal_token>"
+url = "<azure_devops_org_url>"
+project = "<azure_devops_project>"
+team = "<azure_devops_team>"
 ```
 
 > [!NOTE]
