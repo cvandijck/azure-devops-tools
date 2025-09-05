@@ -12,17 +12,17 @@ log_type = click.Choice(
 
 # common options for all subcommands
 url_option = click.option(
-    '--url', '-u', help='Organization URL', envvar=ADO_ORG_URL_VAR, required=True
+    '--url', help='Organization URL', envvar=ADO_ORG_URL_VAR, required=True
 )
 token_option = click.option(
-    '--token', '-t', help='Personal Access Token', envvar=ADO_PAT_VAR, required=True
+    '--token', help='Personal Access Token', envvar=ADO_PAT_VAR, required=True
 )
 project_option = click.option(
-    '--project', '-p', help='Project Name', envvar=ADO_PROJECT_VAR, required=True
+    '--project', help='Project Name', envvar=ADO_PROJECT_VAR, required=True
 )
 team_option = click.option(
-    '--team', '-t', help='Team Name', envvar=ADO_TEAM_VAR, required=True
+    '--team', help='Team Name', envvar=ADO_TEAM_VAR, required=True
 )
 log_option = click.option(
-    '--log-level', '-l', help='Log Level', default='INFO', type=log_type, required=True
+    '--log-level', help='Log Level', default='INFO', type=log_type, required=True
 )

@@ -5,7 +5,7 @@ from adopt.cli.backlog import cli_backlog
 
 @click.group()
 def cli_root():
-    """Root CLI group to hold all subcommands."""
+    """Set of pragmatic tools to automate working with Azure Devops."""
 
 
 # add each subcommand to the root command
