@@ -1,8 +1,22 @@
 import pytest
 
-from adopt.azure_devops import create_connection, get_work_client, get_work_item_tracking_client
-from adopt.backlog.sort import generate_sort_key_func, reorder_backlog, reorder_backlog_local, sort_backlog
-from adopt.work_items import Backlog, create_team_context, get_backlog, get_backlog_category_from_work_item_type
+from adopt.azure_devops import (
+    create_connection,
+    get_work_client,
+    get_work_item_tracking_client,
+)
+from adopt.backlog.sort import (
+    generate_sort_key_func,
+    reorder_backlog,
+    reorder_backlog_local,
+    sort_backlog,
+)
+from adopt.work_items import (
+    Backlog,
+    create_team_context,
+    get_backlog,
+    get_backlog_category_from_work_item_type,
+)
 
 
 def test_local_backlog_reverse(url, token, project, team):

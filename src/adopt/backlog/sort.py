@@ -9,7 +9,12 @@ from azure.devops.v7_0.work_item_tracking import WorkItemTrackingClient
 from contexttimer import timer
 
 from adopt.azure_devops import load_work_items_in_caches
-from adopt.work_items import BACKLOG_REQUIREMENT_CATEGORY, Backlog, BaseWorkItem, get_backlog
+from adopt.work_items import (
+    BACKLOG_REQUIREMENT_CATEGORY,
+    Backlog,
+    BaseWorkItem,
+    get_backlog,
+)
 
 LOGGER = logging.getLogger(__name__)
 
@@ -19,8 +24,13 @@ VALID_SORT_KEY_ELEMENTS = [
     't',  # title
     'r',  # rank
 ]
-VALID_SORT_KEY_ELEMENTS_ALL = [val for el in VALID_SORT_KEY_ELEMENTS for val in (el, el.upper())]
-VALID_SORT_KEY_STR = ', '.join(VALID_SORT_KEY_ELEMENTS_ALL[:-1]) + f' or {VALID_SORT_KEY_ELEMENTS_ALL[-1]}'
+VALID_SORT_KEY_ELEMENTS_ALL = [
+    val for el in VALID_SORT_KEY_ELEMENTS for val in (el, el.upper())
+]
+VALID_SORT_KEY_STR = (
+    ', '.join(VALID_SORT_KEY_ELEMENTS_ALL[:-1])
+    + f' or {VALID_SORT_KEY_ELEMENTS_ALL[-1]}'
+)
 VALID_SORT_KEY_REGEX = re.compile(rf'^[{"".join(VALID_SORT_KEY_ELEMENTS_ALL)}]+$')
 
 DEFAULT_SORT_KEY = 'Iprt'
@@ -55,12 +65,16 @@ class Swap:
 
 def _validate_sort_key(sort_key: str):
     if not VALID_SORT_KEY_REGEX.match(sort_key):
-        raise ValueError(f'Invalid sort key "{sort_key}". Must be a combination of {VALID_SORT_KEY_STR}')
+        raise ValueError(
+            f'Invalid sort key "{sort_key}". Must be a combination of {VALID_SORT_KEY_STR}'
+        )
     if len(set(sort_key.lower())) != len(sort_key.lower()):
         raise ValueError(f'Duplicate sort key elements in "{sort_key}"')
 
 
-def _compare_attr(item1: BaseWorkItem, item2: BaseWorkItem, attr: str, ascending: bool) -> int:
+def _compare_attr(
+    item1: BaseWorkItem, item2: BaseWorkItem, attr: str, ascending: bool
+) -> int:
     item1_attr = getattr(item1, attr)
     item2_attr = getattr(item2, attr)
 
@@ -79,8 +93,12 @@ def _compare_rank(item1: BaseWorkItem, item2: BaseWorkItem, ascending: bool) -> 
     item2_parents_rank = [item.backlog_rank for item in item2.hierarchy]
 
     # if a parent has no rank, we consider it to be at the end of the backlog
-    item1_parents_rank = [rank if rank is not None else MAX_RANK for rank in item1_parents_rank]
-    item2_parents_rank = [rank if rank is not None else MAX_RANK for rank in item2_parents_rank]
+    item1_parents_rank = [
+        rank if rank is not None else MAX_RANK for rank in item1_parents_rank
+    ]
+    item2_parents_rank = [
+        rank if rank is not None else MAX_RANK for rank in item2_parents_rank
+    ]
 
     if item1_parents_rank == item2_parents_rank:
         return 0
@@ -101,7 +119,9 @@ def compare_work_items(item1: BaseWorkItem, item2: BaseWorkItem, sort_key: str) 
         key = key.lower()
 
         if key == 'i':
-            result = _compare_attr(item1, item2, attr='iteration_path', ascending=ascending)
+            result = _compare_attr(
+                item1, item2, attr='iteration_path', ascending=ascending
+            )
         elif key == 'p':
             result = _compare_attr(item1, item2, attr='priority', ascending=ascending)
         elif key == 'r':
@@ -130,7 +150,9 @@ def sort_backlog(
     sort_key: str = DEFAULT_SORT_KEY,
 ) -> Backlog:
     # load all work items in cache to avoid multiple calls to the server
-    load_work_items_in_caches(team_context=team_context, work_client=work_client, wit_client=wit_client)
+    load_work_items_in_caches(
+        team_context=team_context, work_client=work_client, wit_client=wit_client
+    )
 
     backlog = get_backlog(
         wit_client=wit_client,
@@ -179,12 +201,17 @@ def sort_backlog(
 
 
 def reorder_backlog(
-    backlog: Backlog, target_backlog: Backlog, work_client: WorkClient, team_context: TeamContext
+    backlog: Backlog,
+    target_backlog: Backlog,
+    work_client: WorkClient,
+    team_context: TeamContext,
 ) -> None:
     swaps = _compute_swaps(backlog=backlog, target=target_backlog)
     for swap in swaps:
         LOGGER.info(f'Apply swap {swap}')
-        _apply_swap_on_azure(swap=swap, work_client=work_client, team_context=team_context)
+        _apply_swap_on_azure(
+            swap=swap, work_client=work_client, team_context=team_context
+        )
 
 
 def reorder_backlog_local(backlog: Backlog, target_backlog: Backlog):
@@ -222,7 +249,9 @@ def _compute_swaps(backlog: Backlog, target: Backlog) -> list[Swap]:
     return swaps
 
 
-def _apply_swap_on_azure(swap: Swap, work_client: WorkClient, team_context: TeamContext):
+def _apply_swap_on_azure(
+    swap: Swap, work_client: WorkClient, team_context: TeamContext
+):
     reorder_operation = ReorderOperation(
         ids=[swap.item_id],
         iteration_path=None,
@@ -246,5 +275,7 @@ def _apply_swap_on_backlog(swap: Swap, backlog: Backlog):
         next_item_idx = work_items.index(swap.next_item)
         assert prev_item_idx == next_item_idx - 1
 
-        work_items = work_items[: prev_item_idx + 1] + [swap.item] + work_items[next_item_idx:]
+        work_items = (
+            work_items[: prev_item_idx + 1] + [swap.item] + work_items[next_item_idx:]
+        )
     backlog.work_items = work_items

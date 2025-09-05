@@ -31,7 +31,11 @@ WI_BUG_TYPE = 'Bug'
 BACKLOG_EPIC_CATEGORY = 'Microsoft.EpicCategory'
 BACKLOG_FEATURE_CATEGORY = 'Microsoft.FeatureCategory'
 BACKLOG_REQUIREMENT_CATEGORY = 'Microsoft.RequirementCategory'
-ORDERED_BACKLOG_CATEGORIES = (BACKLOG_EPIC_CATEGORY, BACKLOG_FEATURE_CATEGORY, BACKLOG_REQUIREMENT_CATEGORY)
+ORDERED_BACKLOG_CATEGORIES = (
+    BACKLOG_EPIC_CATEGORY,
+    BACKLOG_FEATURE_CATEGORY,
+    BACKLOG_REQUIREMENT_CATEGORY,
+)
 
 
 BACKLOG_CATEGORY_WORK_ITEM_TYPE_MAP = {
@@ -58,7 +62,9 @@ def clear_caches():
     BACKLOG_WORK_ITEMS_CACHE.clear()
 
 
-def create_connection(organization_url: str, token_password: str, user: Optional[str] = None) -> Connection:
+def create_connection(
+    organization_url: str, token_password: str, user: Optional[str] = None
+) -> Connection:
     user = user if user else ''
     credentials = BasicAuthentication(username=user, password=token_password)
     connection = Connection(base_url=organization_url, creds=credentials)
@@ -82,10 +88,14 @@ def get_work_item_types_from_backlog_category(backlog_category: str) -> tuple[st
 
 
 def get_parent_backlog_categories(backlog_category: str) -> tuple[str, ...]:
-    return ORDERED_BACKLOG_CATEGORIES[: ORDERED_BACKLOG_CATEGORIES.index(backlog_category)]
+    return ORDERED_BACKLOG_CATEGORIES[
+        : ORDERED_BACKLOG_CATEGORIES.index(backlog_category)
+    ]
 
 
-def get_work_item(work_item_id: int, wit_client: WorkItemTrackingClient, force_api: bool = False) -> WorkItem:
+def get_work_item(
+    work_item_id: int, wit_client: WorkItemTrackingClient, force_api: bool = False
+) -> WorkItem:
     if not force_api and work_item_id in WORK_ITEM_CACHE:
         return WORK_ITEM_CACHE[work_item_id]
 
@@ -120,7 +130,9 @@ def get_backlog_work_items(
     return work_items
 
 
-def get_parent_work_item(work_item: WorkItem, wit_client: WorkItemTrackingClient) -> Optional[WorkItem]:
+def get_parent_work_item(
+    work_item: WorkItem, wit_client: WorkItemTrackingClient
+) -> Optional[WorkItem]:
     relations = work_item.relations
     if not relations:
         return None
@@ -132,7 +144,9 @@ def get_parent_work_item(work_item: WorkItem, wit_client: WorkItemTrackingClient
     return None
 
 
-def get_children_work_items(work_item: WorkItem, wit_client: WorkItemTrackingClient) -> Optional[list[WorkItem]]:
+def get_children_work_items(
+    work_item: WorkItem, wit_client: WorkItemTrackingClient
+) -> Optional[list[WorkItem]]:
     relations = work_item.relations
     if not relations:
         return None

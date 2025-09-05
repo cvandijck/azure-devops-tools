@@ -51,7 +51,9 @@ class BaseWorkItem:
         team_context: TeamContext,
     ):
         if work_item.fields[WI_ITEM_TYPE_KEY] != self.WORK_ITEM_NAME:
-            raise ValueError(f'Work item {work_item.url} is not a {self.WORK_ITEM_NAME}')
+            raise ValueError(
+                f'Work item {work_item.url} is not a {self.WORK_ITEM_NAME}'
+            )
 
         self._work_item = work_item
         self._wit_client = wit_client
@@ -128,7 +130,9 @@ class BaseWorkItem:
     @property
     def backlog_rank(self) -> Optional[int]:
         if self._own_backlog_rank is None:
-            backlog_category = get_backlog_category_from_work_item_type(self.WORK_ITEM_NAME)
+            backlog_category = get_backlog_category_from_work_item_type(
+                self.WORK_ITEM_NAME
+            )
             self._own_backlog_rank = get_work_item_backlog_rank(
                 work_item=self._work_item,
                 wit_client=self._wit_client,
@@ -264,7 +268,9 @@ def get_work_item_backlog_rank(
 
     backlog_work_item_ids = [wi.id for wi in backlog_work_items]
     if work_item.id not in backlog_work_item_ids:
-        LOGGER.warning(f'Work item "{work_item.fields[WI_TITLE_KEY]}" [{work_item.id}] is not in the backlog')
+        LOGGER.warning(
+            f'Work item "{work_item.fields[WI_TITLE_KEY]}" [{work_item.id}] is not in the backlog'
+        )
         return None
     return backlog_work_item_ids.index(work_item.id) + 1
 
