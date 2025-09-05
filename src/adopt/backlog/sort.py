@@ -8,6 +8,7 @@ from azure.devops.v7_0.work import ReorderOperation, TeamContext, WorkClient
 from azure.devops.v7_0.work_item_tracking import WorkItemTrackingClient
 from contexttimer import timer
 
+from adopt.connect import load_work_items_in_caches
 from adopt.utils import BACKLOG_REQUIREMENT_CATEGORY, Backlog, BaseWorkItem, get_backlog
 
 LOGGER = logging.getLogger(__name__)
@@ -120,7 +121,7 @@ def generate_sort_key_func(sort_key: str):
     return cmp_to_key(partial(compare_work_items, sort_key=sort_key))
 
 
-@timer(logger=LOGGER, level=logging.INFO, fmt='Sorted backlog in %(execution_time).2s')
+@timer(logger=LOGGER, level=logging.INFO, fmt='Sorted backlog in %(execution_time).2fs')
 def sort_backlog(
     wit_client: WorkItemTrackingClient,
     work_client: WorkClient,
@@ -128,6 +129,9 @@ def sort_backlog(
     backlog_category: str = BACKLOG_REQUIREMENT_CATEGORY,
     sort_key: str = DEFAULT_SORT_KEY,
 ) -> Backlog:
+    # load all work items in cache to avoid multiple calls to the server
+    load_work_items_in_caches(team_context=team_context, work_client=work_client, wit_client=wit_client)
+
     backlog = get_backlog(
         wit_client=wit_client,
         work_client=work_client,
@@ -183,7 +187,7 @@ def reorder_backlog(
         _apply_swap_on_azure(swap=swap, work_client=work_client, team_context=team_context)
 
 
-def reorder_backlog_local(backlog: Backlog, target_backlog: Backlog) -> Backlog:
+def reorder_backlog_local(backlog: Backlog, target_backlog: Backlog):
     swaps = _compute_swaps(backlog=backlog, target=target_backlog)
     for swap in swaps:
         LOGGER.info(f'Apply swap {swap}')

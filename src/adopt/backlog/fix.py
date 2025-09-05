@@ -3,13 +3,13 @@ import logging
 from azure.devops.v7_0.work import TeamContext, WorkClient
 from azure.devops.v7_0.work_item_tracking import WorkItemTrackingClient
 
+from adopt.connect import get_parent_backlog_categories
 from adopt.utils import (
     BACKLOG_REQUIREMENT_CATEGORY,
     WI_ITERATION_PATH_KEY,
     WI_STATE_KEY,
     State,
     get_backlog,
-    get_parent_backlog_categories,
     update_work_item_field,
 )
 

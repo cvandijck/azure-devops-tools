@@ -25,8 +25,8 @@ sort_option = click.option(
 @sort_option
 @log_option
 def cli_sort_backlog(url: str, token: str, project: str, team: str, category: str, sort_key: str, log_level: str):
-    log_level = convert_logging_level(log_level)
-    configure_logging(level=log_level, exclude_external_logs=True)
+    log_level_int = convert_logging_level(log_level)
+    configure_logging(level=log_level_int, exclude_external_logs=True)
 
     connection = create_connection(organization_url=url, token_password=token)
     wit_client = get_work_item_tracking_client(connection=connection)

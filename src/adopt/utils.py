@@ -6,68 +6,27 @@ from typing import Optional
 from azure.devops.v7_0.work import TeamContext, WorkClient
 from azure.devops.v7_0.work_item_tracking import WorkItem, WorkItemTrackingClient
 
+from adopt.connect import (
+    BACKLOG_REQUIREMENT_CATEGORY,
+    WI_ASSIGNED_TO_KEY,
+    WI_BUG_TYPE,
+    WI_EPIC_TYPE,
+    WI_FEATURE_TYPE,
+    WI_ITEM_TYPE_KEY,
+    WI_ITERATION_PATH_KEY,
+    WI_PRIORITY_KEY,
+    WI_STATE_KEY,
+    WI_STORY_POINTS_KEY,
+    WI_TITLE_KEY,
+    WI_USER_STORY_TYPE,
+    get_backlog_category_from_work_item_type,
+    get_backlog_work_items,
+    get_children_work_items,
+    get_parent_work_item,
+    get_work_item,
+)
+
 LOGGER = logging.getLogger(__name__)
-
-# backlog categories
-BACKLOG_EPIC_CATEGORY = 'Microsoft.EpicCategory'
-BACKLOG_FEATURE_CATEGORY = 'Microsoft.FeatureCategory'
-BACKLOG_REQUIREMENT_CATEGORY = 'Microsoft.RequirementCategory'
-ORDENED_BACKLOG_CATEGORIES = (BACKLOG_EPIC_CATEGORY, BACKLOG_FEATURE_CATEGORY, BACKLOG_REQUIREMENT_CATEGORY)
-
-# work item fields
-WI_ID_KEY = 'System.Id'
-WI_TITLE_KEY = 'System.Title'
-WI_PRIORITY_KEY = 'Microsoft.VSTS.Common.Priority'
-WI_ITEM_TYPE_KEY = 'System.WorkItemType'
-WI_ITERATION_PATH_KEY = 'System.IterationPath'
-WI_STORY_POINTS_KEY = 'Microsoft.VSTS.Scheduling.StoryPoints'
-WI_ASSIGNED_TO_KEY = 'System.AssignedTo'
-WI_STATE_KEY = 'System.State'
-
-WI_RELATIONS = 'Relations'
-WI_PARENT_RELATION = 'System.LinkTypes.Hierarchy-Reverse'
-WI_CHILD_RELATION = 'System.LinkTypes.Hierarchy-Forward'
-
-# work item types
-WI_EPIC_TYPE = 'Epic'
-WI_FEATURE_TYPE = 'Feature'
-WI_USER_STORY_TYPE = 'User Story'
-WI_USER_STORY_TYPE_2 = 'Story'
-WI_BUG_TYPE = 'Bug'
-
-BACKLOG_CATEGORY_WORK_ITEM_TYPE_MAP = {
-    BACKLOG_EPIC_CATEGORY.lower(): (WI_EPIC_TYPE,),
-    BACKLOG_FEATURE_CATEGORY.lower(): (WI_FEATURE_TYPE,),
-    BACKLOG_REQUIREMENT_CATEGORY.lower(): (WI_USER_STORY_TYPE, WI_BUG_TYPE),
-}
-
-BACKLOG_WORK_ITEM_TYPE_CATEGORY_MAP = {
-    WI_EPIC_TYPE.lower(): BACKLOG_EPIC_CATEGORY,
-    WI_FEATURE_TYPE.lower(): BACKLOG_FEATURE_CATEGORY,
-    WI_USER_STORY_TYPE.lower(): BACKLOG_REQUIREMENT_CATEGORY,
-    WI_USER_STORY_TYPE_2.lower(): BACKLOG_REQUIREMENT_CATEGORY,
-    WI_BUG_TYPE.lower(): BACKLOG_REQUIREMENT_CATEGORY,
-}
-
-WORK_ITEM_CACHE: dict[int, WorkItem] = {}
-BACKLOG_WORK_ITEMS_CACHE: dict[tuple[str, str], list[WorkItem]] = {}
-
-
-def clear_caches():
-    WORK_ITEM_CACHE.clear()
-    BACKLOG_WORK_ITEMS_CACHE.clear()
-
-
-def get_backlog_category_from_work_item_type(work_item_type: str) -> str:
-    return BACKLOG_WORK_ITEM_TYPE_CATEGORY_MAP[work_item_type.lower()]
-
-
-def get_work_item_types_from_backlog_category(backlog_category: str) -> tuple[str, ...]:
-    return BACKLOG_CATEGORY_WORK_ITEM_TYPE_MAP[backlog_category.lower()]
-
-
-def get_parent_backlog_categories(backlog_category: str) -> tuple[str, ...]:
-    return ORDENED_BACKLOG_CATEGORIES[: ORDENED_BACKLOG_CATEGORIES.index(backlog_category)]
 
 
 class State(str, Enum):
@@ -104,7 +63,7 @@ class BaseWorkItem:
         self._own_backlog_rank = None
 
     def update(self):
-        wi = self._wit_client.get_work_item(id=self.id, expand=WI_RELATIONS)
+        wi = get_work_item(self.id, self._wit_client, force_api=True)
         self._work_item = wi
         self._parent = None
         self._children = None
@@ -116,6 +75,7 @@ class BaseWorkItem:
 
     @property
     def id(self) -> int:
+        assert self._work_item.id is not None
         return int(self._work_item.id)
 
     @property
@@ -185,13 +145,14 @@ class BaseWorkItem:
         return (*self.parent.hierarchy, self)
 
     def _get_field(self, field_name: str):
+        assert self._work_item.fields is not None
         return self._work_item.fields.get(field_name, None)
 
     def _get_parent(self):
         if self._parent is not None:
             return self._parent
 
-        wi = _get_parent_work_item(self._work_item, self._wit_client)
+        wi = get_parent_work_item(self._work_item, self._wit_client)
         if not wi:
             return None
 
@@ -207,7 +168,7 @@ class BaseWorkItem:
         if self._children is not None:
             return self._children
 
-        children = _get_children_work_items(self._work_item, self._wit_client)
+        children = get_children_work_items(self._work_item, self._wit_client)
         if children is None:
             return None
 
@@ -254,7 +215,7 @@ class UserStory(BaseWorkItem):
 
 class Bug(BaseWorkItem):
     PARENT_CLASS = Feature
-    WORK_ITEM_TYPE = WI_BUG_TYPE
+    WORK_ITEM_NAME = WI_BUG_TYPE
 
     def __str__(self) -> str:
         return f'({self.priority}) {super().__str__()}'
@@ -287,61 +248,6 @@ class Backlog:
         return '\n'.join(str(wi) for wi in self.work_items)
 
 
-def _get_work_item_from_cache_or_api(work_item_id: int, wit_client: WorkItemTrackingClient) -> WorkItem:
-    if work_item_id in WORK_ITEM_CACHE:
-        return WORK_ITEM_CACHE[work_item_id]
-
-    work_item = wit_client.get_work_item(id=work_item_id, expand=WI_RELATIONS)
-    WORK_ITEM_CACHE[work_item_id] = work_item
-    return work_item
-
-
-def _get_backlog_work_items_from_cache_or_api(
-    backlog_category: str, team_context: TeamContext, work_client: WorkClient, wit_client: WorkItemTrackingClient
-) -> list[WorkItem]:
-    assert team_context.project, 'Project must be set in team_context'
-
-    cache_key = (team_context.project, backlog_category)
-    if cache_key in BACKLOG_WORK_ITEMS_CACHE:
-        return BACKLOG_WORK_ITEMS_CACHE[cache_key]
-
-    backlog_work_items = work_client.get_backlog_level_work_items(
-        team_context=team_context, backlog_id=backlog_category
-    ).work_items
-
-    work_item_ids = [wi.target.id for wi in backlog_work_items]
-    work_items_details = wit_client.get_work_items(ids=work_item_ids, expand=WI_RELATIONS)
-
-    BACKLOG_WORK_ITEMS_CACHE[cache_key] = work_items_details
-    return work_items_details
-
-
-def _get_parent_work_item(work_item: WorkItem, wit_client: WorkItemTrackingClient) -> Optional[WorkItem]:
-    relations = work_item.relations
-    if not relations:
-        return None
-
-    for relation in relations:
-        if relation.rel == WI_PARENT_RELATION:
-            parent_id = int(relation.url.split('/')[-1])
-            return _get_work_item_from_cache_or_api(parent_id, wit_client)
-    return None
-
-
-def _get_children_work_items(work_item: WorkItem, wit_client: WorkItemTrackingClient) -> Optional[list[WorkItem]]:
-    relations = work_item.relations
-    if not relations:
-        return None
-
-    children = []
-    for relation in relations:
-        if relation.rel == WI_CHILD_RELATION:
-            child_id = int(relation.url.split('/')[-1])
-            child = _get_work_item_from_cache_or_api(child_id, wit_client)
-            children.append(child)
-    return children
-
-
 def get_work_item_backlog_rank(
     work_item: WorkItem,
     wit_client: WorkItemTrackingClient,
@@ -349,7 +255,7 @@ def get_work_item_backlog_rank(
     team_context: TeamContext,
     backlog_category: str,
 ) -> Optional[int]:
-    backlog_work_items = _get_backlog_work_items_from_cache_or_api(
+    backlog_work_items = get_backlog_work_items(
         backlog_category=backlog_category,
         team_context=team_context,
         work_client=work_client,
@@ -358,7 +264,7 @@ def get_work_item_backlog_rank(
 
     backlog_work_item_ids = [wi.id for wi in backlog_work_items]
     if work_item.id not in backlog_work_item_ids:
-        LOGGER.warning(f'Work item {work_item.id} is not in the backlog')
+        LOGGER.warning(f'Work item "{work_item.fields[WI_TITLE_KEY]}" [{work_item.id}] is not in the backlog')
         return None
     return backlog_work_item_ids.index(work_item.id) + 1
 
@@ -417,7 +323,7 @@ def get_backlog(
     team_context: TeamContext,
     backlog_category: str = BACKLOG_REQUIREMENT_CATEGORY,
 ) -> Backlog:
-    backlog_work_items = _get_backlog_work_items_from_cache_or_api(
+    backlog_work_items = get_backlog_work_items(
         backlog_category=backlog_category,
         team_context=team_context,
         work_client=work_client,
