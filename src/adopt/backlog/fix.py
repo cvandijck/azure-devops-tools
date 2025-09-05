@@ -3,13 +3,13 @@ import logging
 from azure.devops.v7_0.work import TeamContext, WorkClient
 from azure.devops.v7_0.work_item_tracking import WorkItemTrackingClient
 
-from adopt.utils import (
+from adopt.azure_devops import get_parent_backlog_categories
+from adopt.work_items import (
     BACKLOG_REQUIREMENT_CATEGORY,
     WI_ITERATION_PATH_KEY,
     WI_STATE_KEY,
     State,
     get_backlog,
-    get_parent_backlog_categories,
     update_work_item_field,
 )
 
@@ -37,7 +37,9 @@ def fix_backlog_state(
             allow_to_close=allow_to_close,
         )
 
-    parent_backlog_categories = get_parent_backlog_categories(backlog_category=backlog_category)
+    parent_backlog_categories = get_parent_backlog_categories(
+        backlog_category=backlog_category
+    )
     for parent_category in reversed(parent_backlog_categories):
         fix_backlog_state(
             wit_client=wit_client,
@@ -73,13 +75,17 @@ def _update_backlog_state_on_children(
             new_state = State.ACTIVE.value
         elif all(state == State.NEW.value for state in child_states):
             new_state = State.NEW.value
-        elif allow_to_close and all(state == State.CLOSED.value for state in child_states):
+        elif allow_to_close and all(
+            state == State.CLOSED.value for state in child_states
+        ):
             new_state = State.CLOSED.value
         else:
             new_state = None
 
         if new_state and item.state != new_state:
-            LOGGER.info(f'Updating state of {item.item_type} [{item.id}] {item.title} to {new_state}')
+            LOGGER.info(
+                f'Updating state of {item.item_type} [{item.id}] {item.title} to {new_state}'
+            )
             update_work_item_field(
                 work_item=item.azure_work_item,
                 wit_client=wit_client,
@@ -107,7 +113,9 @@ def fix_backlog_iteration(
             backlog_category=backlog_category,
         )
 
-    parent_backlog_categories = get_parent_backlog_categories(backlog_category=backlog_category)
+    parent_backlog_categories = get_parent_backlog_categories(
+        backlog_category=backlog_category
+    )
     for parent_category in reversed(parent_backlog_categories):
         fix_backlog_iteration(
             wit_client=wit_client,

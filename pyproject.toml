@@ -19,7 +19,14 @@ classifiers = [
     'Intended Audience :: Developers',
     'Programming Language :: Python :: 3',
 ]
-dependencies = ['azure-devops', 'python-dotenv', 'click', 'prettytable']
+dependencies = [
+    'azure-devops',
+    'python-dotenv',
+    'click',
+    'prettytable',
+    'toml',
+    'contexttimer',
+]
 dynamic = ['version']
 
 [dependency-groups]
@@ -42,7 +49,7 @@ extend-exclude = [
     '**/*_depr',   # Ignore deprecated dirs
     '*_depr',      # Ignore deprecated files
 ]
-line-length = 120 # Set max line length
+line-length = 88 # Set max line length
 target-version = 'py39' # Specify our minimal target version
 
 [tool.ruff.lint]

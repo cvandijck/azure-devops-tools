@@ -13,7 +13,7 @@ BUILD_WHEEL_DIR = $(BUILD_DIR)/wheel
 BUILD_TEST_DIR = $(BUILD_DIR)/test
 
 UV = uv
-CREATE_ENV_CMD=$(UV) venv --python $(PYTHON_VERSION) $(VENV_NAME)
+CREATE_ENV_CMD=$(UV) venv --python $(PYTHON_VERSION) $(VENV_NAME) --seed
 ifeq ($(MAKE_OS), Windows)
 	PYTHON = $(VENV_NAME)\Scripts\python
 	ACTIVATE = $(VENV_NAME)\Scripts\activate
@@ -27,7 +27,7 @@ install: create-env install-project install-pre-commit
 create-env:
 	$(info MAKE: Initializing environment in .venv ...)
 	$(CREATE_ENV_CMD)
-	$(UV) pip install --upgrade "pip>=24"
+	$(UV) pip install --upgrade "pip>=24" wheel
 
 install-project:
 	$(info MAKE: Installing project ...)

@@ -4,8 +4,8 @@ import sys
 
 import pytest
 
+from adopt.azure_devops import create_connection
 from adopt.config import ADO_ORG_URL_VAR, ADO_PAT_VAR
-from adopt.connect import create_connection
 
 PYTHON_EXE = sys.executable
 
@@ -25,5 +25,9 @@ def test_import_package():
 @pytest.mark.console
 def test_console_help():
     """Calls help file of console script and tests for failure."""
-    process = subprocess.run([PYTHON_EXE, '-m', 'adopt', '--help'], capture_output=True, universal_newlines=True)
+    process = subprocess.run(
+        [PYTHON_EXE, '-m', 'adopt', '--help'],
+        capture_output=True,
+        universal_newlines=True,
+    )
     assert process.returncode == 0, process.stderr

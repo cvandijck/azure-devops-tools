@@ -1,6 +1,6 @@
 from prettytable import PrettyTable
 
-from adopt.utils import Backlog
+from adopt.work_items import Backlog
 
 
 # TODO: determine columns from key similar to sort

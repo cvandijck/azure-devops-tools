@@ -3,7 +3,7 @@ import logging
 from azure.devops.v7_0.work import TeamContext, WorkClient
 from azure.devops.v7_0.work_item_tracking import WorkItemTrackingClient
 
-from adopt.utils import BACKLOG_REQUIREMENT_CATEGORY, get_backlog
+from adopt.work_items import BACKLOG_REQUIREMENT_CATEGORY, get_backlog
 
 LOGGER = logging.getLogger(__name__)
 
@@ -43,7 +43,9 @@ def check_all_items_have_points(
 
     for item in backlog:
         if not item.story_points:
-            LOGGER.error(f'{item.item_type} [{item.id}] {item.title} does not have story points')
+            LOGGER.error(
+                f'{item.item_type} [{item.id}] {item.title} does not have story points'
+            )
 
 
 def check_if_all_items_have_parent(
@@ -62,4 +64,6 @@ def check_if_all_items_have_parent(
 
     for item in backlog:
         if not item.parent:
-            LOGGER.error(f'{item.item_type} [{item.id}] {item.title} does not have a parent')
+            LOGGER.error(
+                f'{item.item_type} [{item.id}] {item.title} does not have a parent'
+            )

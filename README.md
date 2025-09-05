@@ -125,7 +125,7 @@ Each configuration option will load predefined values for the required arguments
 
 These values can also be loaded, or overwritten, by a local `.env` file in the working directly from which `adopt` is executed.
 
-Alternatively, a configuration file `.adopt` can be used locally in the project directory or globally in the user's home directory to set these required arguments:
+Alternatively, a TOML-styled configuration file `.adopt` can be used locally in the project directory or globally in the user's home directory to set these required arguments:
 
 ```toml
 [adopt]

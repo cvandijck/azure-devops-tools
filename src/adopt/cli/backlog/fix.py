@@ -2,22 +2,46 @@ import logging
 
 import click
 
+from adopt.azure_devops import (
+    create_connection,
+    get_work_client,
+    get_work_item_tracking_client,
+)
 from adopt.backlog.fix import fix_backlog_iteration, fix_backlog_state
 from adopt.cli.backlog.options import category_option
-from adopt.cli.options import CONTEXT_SETTINGS, log_option, project_option, team_option, token_option, url_option
-from adopt.connect import create_connection, get_work_client, get_work_item_tracking_client
+from adopt.cli.options import (
+    CONTEXT_SETTINGS,
+    log_option,
+    project_option,
+    team_option,
+    token_option,
+    url_option,
+)
 from adopt.logging import configure_logging, convert_logging_level
-from adopt.utils import create_team_context, get_backlog_category_from_work_item_type
+from adopt.work_items import (
+    create_team_context,
+    get_backlog_category_from_work_item_type,
+)
 
 LOGGER = logging.getLogger(__name__)
 
 fix_all_option = click.option('--fix-all', help='Fix all inconsistencies', is_flag=True)
-fix_state_option = click.option('--fix-state', help='Fix state inconsistencies', is_flag=True)
-fix_iteration_option = click.option('--fix-iteration', help='Fix iteration inconsistencies', is_flag=True)
-close_option = click.option('--allow-close', help='Allow to close work items', is_flag=True)
+fix_state_option = click.option(
+    '--fix-state', help='Fix state inconsistencies', is_flag=True
+)
+fix_iteration_option = click.option(
+    '--fix-iteration', help='Fix iteration inconsistencies', is_flag=True
+)
+close_option = click.option(
+    '--allow-close', help='Allow to close work items', is_flag=True
+)
 
 
-@click.command(name='fix', help='Fix inconsistencies in the backlog', context_settings=CONTEXT_SETTINGS)
+@click.command(
+    name='fix',
+    help='Fix inconsistencies in the backlog',
+    context_settings=CONTEXT_SETTINGS,
+)
 @url_option
 @token_option
 @project_option
