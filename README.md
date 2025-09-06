@@ -1,4 +1,27 @@
-# azure-devops-tools
+# Azure DevOps Practical Tools
+
+<!-- Basic Python -->
+[![Python](https://img.shields.io/badge/python-3.9%2B-blue.svg)](https://www.python.org/downloads/)
+[![Development Status](https://img.shields.io/badge/status-alpha-orange.svg)](https://pypi.org/project/adopt/)
+[![PyPI version](https://badge.fury.io/py/adopt.svg)](https://badge.fury.io/py/adopt)
+[![License](https://img.shields.io/badge/license-BSD--3--Clause-green.svg)](https://opensource.org/licenses/BSD-3-Clause)
+
+<!-- Repository -->
+[![GitHub](https://img.shields.io/badge/github-azure--devops--tools-blue.svg)](https://github.com/cvandijck/azure-devops-tools)
+[![CI](https://github.com/cvandijck/azure-devops-tools/workflows/Build,%20Test%20and%20Install/badge.svg)](https://github.com/cvandijck/azure-devops-tools/actions)
+
+<!-- Tooling -->
+[![uv](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/uv/main/assets/badge/v0.json)](https://github.com/astral-sh/uv)
+[![ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff)
+[![pre-commit](https://img.shields.io/badge/pre--commit-enabled-brightgreen?logo=pre-commit)](https://github.com/pre-commit/pre-commit)
+[![pytest](https://img.shields.io/badge/pytest-enabled-blue.svg)](https://github.com/pytest-dev/pytest)
+
+<br>
+
+> _To Augustin, a PM with an imperturbable annoyance for all things Azure DevOps.. Without your daily complaints, this project would not exist._
+
+<br>
+<br>
 
 **A**zure **D**ev**O**ps **P**ractical **T**ools is a set of tools to automate working with Azure Devops. The tools are developed as a CLI tool `adopt` to easily manage your Azure Devops project. The tool is actively being developed and tools are continuously being added. Suggestions for new tools are always welcome and can be requested via the [GitHub issues](https://github.com/cvandijck/azure-devops-tools/issues) or, even better, by [contributing](#contribute) to the project.
 
@@ -137,6 +160,57 @@ team = "<azure_devops_team>"
 
 > [!NOTE]
 > A combination between the configuration file and an environment variable for your *Azure Personal Access Token* is recommended to safely manage these predefined arguments.
+
+## Nightly Backlog Management
+Adopt can be used to automatically manage your backlog on a nightly basis. The easiest way to do this is to add a DevOps pipeline to your project that runs the required `adopt` commands on a nightly basis. An example YAML pipeline to run the `backlog sort` command can be found below:
+
+```yaml
+trigger: none
+
+variables:
+  url: "https://dev.azure.com/<your_organization>"
+  project: "<your_project>"
+  team: "<your_team>"
+
+schedules:
+- cron: "0 0 * * *"
+  displayName: Daily midnight build
+  branches:
+    include:
+    - main
+
+pool:
+  vmImage: 'ubuntu-latest'
+
+jobs:
+- job: SortBacklog
+  displayName: 'Sort Backlog'
+  steps:
+  - task: UsePythonVersion@0
+    inputs:
+      versionSpec: '3.x'
+      addToPath: true
+    displayName: 'Use Latest Python'
+
+  - script: |
+      python -m pip install --upgrade pip
+      pip install adopt
+    displayName: 'Install latest version of adopt'
+
+  - script: |
+      adopt backlog sort --url "$(url)" --project "$(project)" --team "$(team)" --token "$(System.AccessToken)" 2>&1 | tee adopt_output.log
+      if grep -q "WARNING" adopt_output.log; then
+        echo "##vso[task.logissue type=warning]WARNING detected in adopt backlog sort output"
+        echo "##vso[task.complete result=SucceededWithIssues;]WARNING found but continuing pipeline"
+        exit 0
+      else
+        echo "No warnings detected"
+        exit 0
+      fi
+    displayName: 'Run adopt with warning check'
+    continueOnError: true
+
+```
 
 ## Contribute
 
