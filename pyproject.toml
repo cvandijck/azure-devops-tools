@@ -10,6 +10,7 @@ authors = [
 ]
 description = 'Set of pragmatic tools to automate working with Azure Devops'
 readme = { file = 'README.md', content-type = 'text/markdown' }
+urls = { "Homepage" = "https://github.com/cvandijck/azure-devops-tools", "Repository" = "https://github.com/cvandijck/azure-devops-tools" }
 
 requires-python = '>=3.9'
 keywords = []
