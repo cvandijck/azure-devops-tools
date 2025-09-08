@@ -167,6 +167,18 @@ Adopt can be used to automatically manage your backlog on a nightly basis. The e
 ```yaml
 trigger: none
 
+parameters:
+- name: logLevel
+  displayName: 'Log Level'
+  type: string
+  default: 'INFO'
+  values:
+  - DEBUG
+  - INFO
+  - WARNING
+  - ERROR
+  - CRITICAL
+
 variables:
   url: "https://dev.azure.com/<your_organization>"
   project: "<your_project>"
@@ -174,7 +186,7 @@ variables:
 
 schedules:
 - cron: "0 0 * * *"
-  displayName: Daily midnight build
+  displayName: Nightly run
   branches:
     include:
     - main
@@ -183,8 +195,12 @@ pool:
   vmImage: 'ubuntu-latest'
 
 jobs:
-- job: SortBacklog
-  displayName: 'Sort Backlog'
+- job: ManageBacklog
+  displayName: 'Manage Backlog'
+  variables:
+    ADOPT_AZURE_DEVOPS_ORGANIZATION_URL: $(url)
+    ADOPT_AZURE_DEVOPS_PROJECT_NAME: $(project)
+    ADOPT_AZURE_DEVOPS_TEAM_NAME: $(team)
   steps:
   - task: UsePythonVersion@0
     inputs:
@@ -198,18 +214,38 @@ jobs:
     displayName: 'Install latest version of adopt'
 
   - script: |
-      adopt backlog sort --url "$(url)" --project "$(project)" --team "$(team)" --token "$(System.AccessToken)" 2>&1 | tee adopt_output.log
-      if grep -q "WARNING" adopt_output.log; then
+      adopt backlog sort --token $(System.AccessToken) --log-level "${{ parameters.logLevel }}" 2>&1 | tee adopt_output.log
+
+      exit_code=${PIPESTATUS[0]}
+      if [ $exit_code -ne 0 ]; then
+        echo "##vso[task.logissue type=error]adopt backlog sort failed with exit code $exit_code"
+        exit $exit_code
+      elif grep -q "WARNING" adopt_output.log; then
         echo "##vso[task.logissue type=warning]WARNING detected in adopt backlog sort output"
         echo "##vso[task.complete result=SucceededWithIssues;]WARNING found but continuing pipeline"
         exit 0
       else
-        echo "No warnings detected"
+        echo "No warnings detected - sort completed successfully"
         exit 0
       fi
-    displayName: 'Run adopt with warning check'
-    continueOnError: true
+    displayName: 'Sort backlog'
 
+  - script: |
+      adopt backlog check --token $(System.AccessToken) --log-level "${{ parameters.logLevel }}" 2>&1 | tee adopt_check_output.log
+
+      exit_code=${PIPESTATUS[0]}
+      if [ $exit_code -ne 0 ]; then
+        echo "##vso[task.logissue type=error]adopt backlog check failed with exit code $exit_code"
+        exit $exit_code
+      elif grep -q "WARNING" adopt_check_output.log; then
+        echo "##vso[task.logissue type=warning]WARNING detected in adopt backlog check output"
+        echo "##vso[task.complete result=SucceededWithIssues;]WARNING found but continuing pipeline"
+        exit 0
+      else
+        echo "No warnings detected - check completed successfully"
+        exit 0
+      fi
+    displayName: 'Check backlog'
 ```
 
 ## Contribute

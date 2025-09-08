@@ -140,7 +140,7 @@ def generate_sort_key_func(sort_key: str):
     return cmp_to_key(partial(compare_work_items, sort_key=sort_key))
 
 
-@timer(logger=LOGGER, level=logging.INFO, fmt='Sorted backlog in %(execution_time).2fs')
+@timer(logger=LOGGER, level=logging.INFO, fmt='sorted backlog in %(execution_time).2fs')
 def sort_backlog(
     wit_client: WorkItemTrackingClient,
     work_client: WorkClient,
@@ -155,7 +155,7 @@ def sort_backlog(
         backlog_category=backlog_category,
     )
 
-    LOGGER.debug('Current backlog:')
+    LOGGER.debug('current backlog:')
     for item in backlog:
         LOGGER.debug(item)
 
@@ -163,7 +163,7 @@ def sort_backlog(
     sorted_work_items = sorted(backlog.work_items, key=key_func)
     sorted_backlog = Backlog(sorted_work_items)
 
-    LOGGER.debug('Sorted backlog:')
+    LOGGER.debug('sorted backlog:')
     for item in sorted_backlog:
         LOGGER.debug(item)
 
@@ -186,7 +186,7 @@ def sort_backlog(
         team_context=team_context,
         backlog_category=backlog_category,
     )
-    LOGGER.debug('New backlog:')
+    LOGGER.debug('new backlog:')
     for item in new_backlog:
         LOGGER.debug(item)
 
