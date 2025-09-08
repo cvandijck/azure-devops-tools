@@ -78,7 +78,7 @@ def cli_check_backlog(
     category = get_backlog_category_from_work_item_type(work_item_type=category)
 
     if check_all or check_parent:
-        LOGGER.info('Checking if all items have a parent')
+        LOGGER.info('checking if all items have a parent')
         check_if_all_items_have_parent(
             wit_client=wit_client,
             work_client=work_client,
@@ -87,7 +87,7 @@ def cli_check_backlog(
         )
 
     if check_all or check_assigned:
-        LOGGER.info('Checking if all items are assigned')
+        LOGGER.info('checking if all items are assigned')
         check_all_items_assigned(
             wit_client=wit_client,
             work_client=work_client,
@@ -96,7 +96,7 @@ def cli_check_backlog(
         )
 
     if check_all or check_points:
-        LOGGER.info('Checking if all items have story points')
+        LOGGER.info('checking if all items have story points')
         check_all_items_have_points(
             wit_client=wit_client,
             work_client=work_client,
