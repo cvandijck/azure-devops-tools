@@ -84,7 +84,7 @@ def _update_backlog_state_on_children(
 
         if new_state and item.state != new_state:
             LOGGER.info(
-                f'Updating state of {item.item_type} [{item.id}] {item.title} to {new_state}'
+                f'updating state of {item.item_type} [{item.id}] {item.title} to {new_state}'
             )
             update_work_item_field(
                 work_item=item.azure_work_item,
@@ -150,7 +150,7 @@ def _update_backlog_iteration_on_children(
 
         if item.iteration_path != latest_child_iteration:
             LOGGER.info(
-                f'Updating iteration path of {item.item_type} [{item.id}] {item.title} to {latest_child_iteration}'
+                f'updating iteration path of {item.item_type} [{item.id}] {item.title} to {latest_child_iteration}'
             )
             update_work_item_field(
                 work_item=item.azure_work_item,

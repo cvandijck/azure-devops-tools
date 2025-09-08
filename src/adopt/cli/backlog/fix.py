@@ -74,7 +74,7 @@ def cli_fix_backlog(
     category = get_backlog_category_from_work_item_type(work_item_type=category)
 
     if fix_all or fix_state:
-        LOGGER.info('Fixing state inconsistencies')
+        LOGGER.info('fixing state inconsistencies')
         fix_backlog_state(
             wit_client=wit_client,
             work_client=work_client,
@@ -85,7 +85,7 @@ def cli_fix_backlog(
         )
 
     if fix_all or fix_iteration:
-        LOGGER.info('Fixing iteration inconsistencies')
+        LOGGER.info('fixing iteration inconsistencies')
         fix_backlog_iteration(
             wit_client=wit_client,
             work_client=work_client,

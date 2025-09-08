@@ -24,6 +24,7 @@ from adopt.azure_devops import (
     get_children_work_items,
     get_parent_work_item,
     get_work_item,
+    load_work_items_in_caches,
 )
 
 LOGGER = logging.getLogger(__name__)
@@ -329,6 +330,11 @@ def get_backlog(
     team_context: TeamContext,
     backlog_category: str = BACKLOG_REQUIREMENT_CATEGORY,
 ) -> Backlog:
+    # load all work items in cache to avoid multiple calls to the server
+    load_work_items_in_caches(
+        team_context=team_context, work_client=work_client, wit_client=wit_client
+    )
+
     backlog_work_items = get_backlog_work_items(
         backlog_category=backlog_category,
         team_context=team_context,
