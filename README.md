@@ -16,6 +16,8 @@
 [![pre-commit](https://img.shields.io/badge/pre--commit-enabled-brightgreen?logo=pre-commit)](https://github.com/pre-commit/pre-commit)
 [![pytest](https://img.shields.io/badge/pytest-enabled-blue.svg)](https://github.com/pytest-dev/pytest)
 
+![logo](adopt_logo.png)
+
 <br>
 
 > _To Augustin, a PM with an imperturbable annoyance for all things Azure DevOps.. Without your daily complaints, this project would not exist._
