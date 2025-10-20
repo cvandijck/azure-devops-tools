@@ -89,7 +89,7 @@ Tired of cleaning up your backlog by dragging work items each time you had a bac
 With this short command you can automatically sort the backlog following the specific order you like.
 
 ```console
-adopt backlog print --url <azure_devops_org_url> --token <azure_devops_personal_token> --project <azure_devops_project> --team <azure_devops_team> --category <azure_devops_backlog_category> --sort_key <azure_devops_work_item_field>
+adopt backlog sort --url <azure_devops_org_url> --token <azure_devops_personal_token> --project <azure_devops_project> --team <azure_devops_team> --category <azure_devops_backlog_category> --sort_key <azure_devops_work_item_field>
 ```
 
 The `--sort_key` argument determines the order in which the work items will be sorted in the backlog. The value of the `--sort_key` argument should be a string of characters, where each character represents a field of the work item. The order of the characters in the string determines the order in which the work items will be sorted. In lower case, an acending order is used. When capitalized, the item will be sorted in descending order. The following characters are supported:
