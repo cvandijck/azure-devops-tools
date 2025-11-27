@@ -45,8 +45,6 @@ After installing `uv`, you can install `adopt` as a uv tool by running:
 uv tool install adopt@latest
 ```
 
-and then run the tool by running:
-
 ```console
 uvx adopt
 ```
