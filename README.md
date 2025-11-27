@@ -1,4 +1,4 @@
-# Azure DevOps Practical Tools
+o# Azure DevOps Practical Tools
 
 <!-- Basic Python -->
 [![Python](https://img.shields.io/badge/python-3.9%2B-blue.svg)](https://www.python.org/downloads/)
@@ -51,7 +51,7 @@ and then run the tool by running:
 uvx adopt
 ```
 
-Alternatively, you can install `adopt` as a CLI tool using pip or globally using pipx:
+Alternatively, you can install `adopt` as a CLI tool using pip:
 
 ```console
 python -m pip install adopt
