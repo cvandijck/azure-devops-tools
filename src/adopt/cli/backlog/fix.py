@@ -73,6 +73,12 @@ def cli_fix_backlog(
     team_context = create_team_context(project=project, team=team)
     category = get_backlog_category_from_work_item_type(work_item_type=category)
 
+    if not any([fix_all, fix_state, fix_iteration]):
+        LOGGER.warning(
+            'No fixes specified, use --fix-all to fix all inconsistencies or specify individual fixes'
+        )
+        return
+
     if fix_all or fix_state:
         LOGGER.info('fixing state inconsistencies')
         fix_backlog_state(

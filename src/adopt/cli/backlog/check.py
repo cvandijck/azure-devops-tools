@@ -77,6 +77,12 @@ def cli_check_backlog(
     team_context = create_team_context(project=project, team=team)
     category = get_backlog_category_from_work_item_type(work_item_type=category)
 
+    if not any([check_all, check_parent, check_assigned, check_points]):
+        LOGGER.warning(
+            'No checks specified, use --check-all to check for all issues or specify individual checks'
+        )
+        return
+
     if check_all or check_parent:
         LOGGER.info('checking if all items have a parent')
         check_if_all_items_have_parent(

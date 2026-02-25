@@ -1,4 +1,4 @@
-from prettytable import PrettyTable
+from prettytable import PrettyTable, TableStyle
 
 from adopt.work_items import Backlog
 
@@ -6,6 +6,8 @@ from adopt.work_items import Backlog
 # TODO: determine columns from key similar to sort
 def format_backlog_as_table(backlog: Backlog) -> str:
     table = PrettyTable()
+    table.set_style(TableStyle.MARKDOWN)
+
     table.field_names = [
         'Rank',
         'Title',
@@ -23,7 +25,7 @@ def format_backlog_as_table(backlog: Backlog) -> str:
                 item.id,
                 item.iteration_path,
                 item.priority,
-                item.assigned_to,
+                item.assigned_to['displayName'] if item.assigned_to else None,
                 item.story_points,
             ]
         )
