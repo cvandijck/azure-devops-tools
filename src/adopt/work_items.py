@@ -105,7 +105,7 @@ class BaseWorkItem:
         return self._get_field(WI_ITERATION_PATH_KEY)
 
     @property
-    def assigned_to(self) -> Optional[str]:
+    def assigned_to(self) -> Optional[dict]:
         return self._get_field(WI_ASSIGNED_TO_KEY)
 
     @property
