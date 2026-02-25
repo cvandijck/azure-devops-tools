@@ -115,7 +115,7 @@ Check the backlog for any inconsistencies. The following checks can be performed
 Each check can be enabled separately by using the `--check-{option}` argument, or all at once using the `--check-all` argument.
 
 ```console
-adopt backlog check --url <azure_devops_org_url> --token <azure_devops_personal_token> --project <azure_devops_project> --team <azure_devops_team> --category <azure_devops_backlog_category> [--check-all] [--check-parent] [--check-assigned] [--check-points]
+adopt backlog check [--check-all] [--check-parent] [--check-assigned] [--check-points] --url <azure_devops_org_url> --token <azure_devops_personal_token> --project <azure_devops_project> --team <azure_devops_team> --category <azure_devops_backlog_category>
 ```
 
 ### Backlog Fix
@@ -128,7 +128,7 @@ The `backlog fix` command can automatically fix inconsistencies in the backlog. 
 Each fix can be enabled separately by using the `--fix-{option}` argument, or all at once using the `--fix-all` argument.
 
 ```console
-adopt backlog fix --url <azure_devops_org_url> --token <azure_devops_personal_token> --project <azure_devops_project> --team <azure_devops_team> --category <azure_devops_backlog_category> [--fix-all] [--fix-state] [--fix-iteration]
+adopt backlog fix [--fix-all] [--fix-state] [--fix-iteration] --url <azure_devops_org_url> --token <azure_devops_personal_token> --project <azure_devops_project> --team <azure_devops_team> --category <azure_devops_backlog_category>
 ```
 
 ### Debug logging
